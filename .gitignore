@@ -44,7 +44,7 @@ Generated\ Files/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
-# NUnit
+# NUNIT
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
@@ -54,6 +54,7 @@ nunit-*.xml
 [Rr]eleasePS/
 dlldata.c
 
+# DNX
 # Benchmark Results
 BenchmarkDotNet.Artifacts/
 
@@ -74,6 +75,7 @@ StyleCopReport.xml
 # Files built by Visual Studio
 *_i.c
 *_p.c
+*_i.h
 *_h.h
 *.ilk
 *.meta
@@ -134,6 +136,9 @@ _ReSharper*/
 *.[Rr]e[Ss]harper
 *.DotSettings.user
 
+# JustCode is a .NET coding add-in
+.JustCode
+
 # TeamCity is a build add-in
 _TeamCity*
 
@@ -184,7 +189,7 @@ publish/
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml
-# Note: Comment the next line if you want to checkin your web deploy settings,
+# TODO: Comment the next line if you want to checkin your web deploy settings
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
 *.publishproj
@@ -198,6 +203,7 @@ PublishScripts/
 *.nupkg
 # NuGet Symbol Packages
 *.snupkg
+packages/
 # The packages folder can be ignored because of Package Restore
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
@@ -229,7 +235,7 @@ _pkginfo.txt
 # files ending in .cache can be ignored
 *.[Cc]ache
 # but keep track of directories ending in .cache
-!?*.[Cc]ache/
+!*.[Cc]ache/
 
 # Others
 ClientBin/
@@ -240,6 +246,7 @@ ClientBin/
 *.jfm
 *.pfx
 *.publishsettings
+node_modules/
 orleans.codegen.cs
 
 # Including strong name files can present a security risk
@@ -358,8 +365,26 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+TestResults.xml
+
+# NuGet packages distributables
+dist/
+
+# Ionide cache
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Test coverage files
+coverage.xml
+coverage.*.xml
+
+# Paket tool store
+.paket/.store
+.paket/paket
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
