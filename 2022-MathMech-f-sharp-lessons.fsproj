@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>_2022_MathMech_f_sharp_lessons</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="tests/MainTest.fs" />
+    <Compile Include="HelloWorld.fs" />
+  </ItemGroup>
+</Project>
