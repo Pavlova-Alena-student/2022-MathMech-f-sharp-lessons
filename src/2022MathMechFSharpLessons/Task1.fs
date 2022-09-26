@@ -1,6 +1,17 @@
 namespace _2022MathMechFSharpLessons
 
 module Task1 =
+    let rec NaivePower (a, b) =
+        match b with
+        | 0 ->
+            if a <> 0 then
+                1
+            else
+                raise <| new System.InvalidOperationException()
+        | 1 -> a
+        | b when b > 0 -> a * NaivePower(a, b - 1)
+        | _ -> raise <| new System.InvalidOperationException()
+
     let rec Power (a, b) =
         match b with
         | 0 ->
