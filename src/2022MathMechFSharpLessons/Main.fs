@@ -47,10 +47,10 @@ module Main =
         | Info
         | Version
         | Favorite_Color of string // Look in App.config
-        | Dispersion of int list
+        | Dispersion of int list // Argu does not support int []
         | OddBetween of int * int
         | NaivePower of int * int
-        | [<MainCommand>] Power of int * int
+        | Power of int * int
         interface IArgParserTemplate with
             member s.Usage =
                 match s with

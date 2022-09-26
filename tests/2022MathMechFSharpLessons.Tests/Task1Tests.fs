@@ -48,4 +48,31 @@ module Task1Tests =
                   Expect.isFasterThan
                       (fun _ -> Task1.Power(2, 30) |> ignore)
                       (fun _ -> Task1.NaivePower(2, 30) |> ignore)
-                      "Fast power should be faster then naive implementation" ]
+                      "Fast power should be faster then naive implementation"
+
+              testCase "Dispersion regular test"
+              <| fun _ ->
+                  let subject = Task1.Dispersion([ 10; 4; 2; 6; 8; 11; 4 ])
+                  Expect.equal subject (11 - 2) "Something wrong with dispersion"
+              testCase "Dispersion in equal elements test"
+              <| fun _ ->
+                  let subject = Task1.Dispersion([ for i in 1..30 -> 6 ])
+                  Expect.equal subject 0 "Something wrong with dispersion in equal numbers"
+              testCase "Exception on empty array (dispersion)"
+              <| fun _ ->
+                  Expect.throws
+                      (fun _ -> Task1.Dispersion([]) |> ignore)
+                      "Should fail to calculate dispersion on empty array"
+
+              testCase "OddBetween regular test"
+              <| fun _ ->
+                  let subject = Task1.OddBetween(0, 15)
+
+                  Expect.equal
+                      subject
+                      [| 1; 3; 5; 7; 9; 11; 13; 15 |]
+                      "Something wrong with getting odd numbers between 0 and 15"
+              testCase "Empty list with OddBetween"
+              <| fun _ ->
+                  let subject = Task1.OddBetween(0, -15)
+                  Expect.equal subject [||] "List of odd numbers is not empty between 0 and -15!" ]

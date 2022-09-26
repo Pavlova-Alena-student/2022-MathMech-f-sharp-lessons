@@ -1,11 +1,12 @@
 namespace _2022MathMechFSharpLessons
 
 module Task1 =
-    let Dispersion (a) =
+    // Causion! Fails with empty array
+    let Dispersion (a: int list) =
         (List.reduce (fun acc item -> if acc < item then item else acc) a)
         - (List.reduce (fun acc item -> if acc > item then item else acc) a)
 
-    let OddBetween (a, b) = [ a / 2 * 2 + 1 .. 2 .. b ]
+    let OddBetween (a, b) = [| a / 2 * 2 + 1 .. 2 .. b |]
 
     let rec NaivePower (a, b) =
         match b with
