@@ -40,19 +40,6 @@ module AssemblyInfo =
         let githash = getGitHash assembly
         printfn "%s - %A - %s - %s" name.Name version releaseDate githash
 
-module Say =
-    open System
-
-    let nothing name = name |> ignore
-
-    let hello name = sprintf "Hello %s" name
-
-    let colorizeIn (color: string) str =
-        let oldColor = Console.ForegroundColor
-        Console.ForegroundColor <- (Enum.Parse(typedefof<ConsoleColor>, color) :?> ConsoleColor)
-        printfn "%s" str
-        Console.ForegroundColor <- oldColor
-
 module Main =
     open Argu
 
@@ -60,14 +47,20 @@ module Main =
         | Info
         | Version
         | Favorite_Color of string // Look in App.config
-        | [<MainCommand>] Hello of string
+        | Dispersion of int []
+        | OddBetween of int * int
+        | NaivePower of int * int
+        | [<MainCommand>] Power of int * int
         interface IArgParserTemplate with
             member s.Usage =
                 match s with
                 | Info -> "More detailed information"
                 | Version -> "Version of application"
                 | Favorite_Color _ -> "Favorite color"
-                | Hello _ -> "Who to say hello to"
+                | Dispersion _ -> "Difference between max and min of an array"
+                | OddBetween _ -> "Create array of odd numbers from first to second"
+                | NaivePower _ -> "Get first in power of second naive way"
+                | Power _ -> "Get first in power of second"
 
     [<EntryPoint>]
     let main (argv: string array) =
@@ -80,11 +73,17 @@ module Main =
             AssemblyInfo.printVersion ()
         elif results.Contains Info then
             AssemblyInfo.printInfo ()
-        elif results.Contains Hello then
+        (*elif results.Contains Hello then
             match results.TryGetResult Hello with
             | Some v ->
                 let color = results.GetResult Favorite_Color
                 Say.hello v |> Say.colorizeIn color
+            | None -> parser.PrintUsage() |> printfn "%s"*)
+        elif results.Contains Power then
+            match results.TryGetResult Power with
+            | Some (a, b) ->
+                Task1.Power(a, b)
+                |> printfn "%d in power of %d is %d" a b
             | None -> parser.PrintUsage() |> printfn "%s"
         else
             parser.PrintUsage() |> printfn "%s"
