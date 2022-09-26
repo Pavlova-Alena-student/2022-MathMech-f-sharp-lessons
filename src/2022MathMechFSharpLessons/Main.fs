@@ -47,7 +47,7 @@ module Main =
         | Info
         | Version
         | Favorite_Color of string // Look in App.config
-        | Dispersion of int []
+        | Dispersion of int list
         | OddBetween of int * int
         | NaivePower of int * int
         | [<MainCommand>] Power of int * int
@@ -73,12 +73,26 @@ module Main =
             AssemblyInfo.printVersion ()
         elif results.Contains Info then
             AssemblyInfo.printInfo ()
-        (*elif results.Contains Hello then
-            match results.TryGetResult Hello with
-            | Some v ->
-                let color = results.GetResult Favorite_Color
-                Say.hello v |> Say.colorizeIn color
-            | None -> parser.PrintUsage() |> printfn "%s"*)
+        elif results.Contains Dispersion then
+            match results.TryGetResult Dispersion with
+            | Some (a) ->
+                Task1.Dispersion(a)
+                |> printfn "Difference between max&min in this array is %d"
+            | None -> parser.PrintUsage() |> printfn "%s"
+        elif results.Contains OddBetween then
+            match results.TryGetResult OddBetween with
+            | Some (a, b) ->
+                printfn "Odd numbers between %d and %d:" a b
+
+                for i in Task1.OddBetween(a, b) do
+                    printfn "%d" i
+            | None -> parser.PrintUsage() |> printfn "%s"
+        elif results.Contains NaivePower then
+            match results.TryGetResult NaivePower with
+            | Some (a, b) ->
+                Task1.NaivePower(a, b)
+                |> printfn "%d in power of %d is %d (evaluated naively)" a b
+            | None -> parser.PrintUsage() |> printfn "%s"
         elif results.Contains Power then
             match results.TryGetResult Power with
             | Some (a, b) ->
