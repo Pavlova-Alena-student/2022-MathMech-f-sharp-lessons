@@ -477,3 +477,7 @@ $RECYCLE.BIN/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+## Documentation. Because I don't want it in online repository
+docs/*
+## TODO: maybe remove it later
