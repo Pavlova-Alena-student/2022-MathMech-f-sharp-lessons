@@ -1,10 +1,31 @@
 namespace _2022MathMechFSharpLessons
 
+open System
+
 module Task2 =
     // Functional implementation of list
     type MyFuncList<'value> =
         | Cons of head: 'value * tail: MyFuncList<'value>
         | Empty
+
+    // For testing: get random list
+    let rec MyFuncRandList length =
+        let rng = new Random()
+
+        if length = 0 then
+            Empty
+        else
+            Cons(rng.Next() % 100, MyFuncRandList(length - 1))
+
+    // For testing: insersion sort
+    let rec MyFuncInsertionSort cmp a =
+        match a with
+        | Empty -> Empty
+        | Cons (a0, Empty) -> a
+        | Cons (a0, axs) ->
+            match (MyFuncInsertionSort cmp axs) with
+            | Cons (a1, axs) when cmp a0 a1 -> Cons(a1, MyFuncInsertionSort cmp (Cons(a0, axs)))
+            | a -> Cons(a0, a)
 
     let rec GetLength a =
         match a with
@@ -16,7 +37,7 @@ module Task2 =
             match a with
             | Empty -> Empty
             | Cons (a0, Empty) -> a
-            | Cons (a0, Cons (a1, axs)) when cmp a0 a1 -> Cons(a1, RaiseBubble cmp (Cons(a0, axs)))
+            | Cons (a0, Cons (a1, axs)) when cmp a0 a1 -> RaiseBubble cmp (Cons(a1, Cons(a0, axs)))
             | Cons (a0, Cons (a1, axs)) -> Cons(a0, RaiseBubble cmp (Cons(a1, axs)))
 
         let len = GetLength a
