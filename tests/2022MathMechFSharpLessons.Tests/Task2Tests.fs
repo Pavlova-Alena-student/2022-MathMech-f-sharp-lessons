@@ -46,4 +46,11 @@ module Task2Tests =
                   let b = a
                   let control = Task2.MyFuncInsertionSort(>) a
                   let subject = Task2.MyFuncBubbleSort(>) b
-                  Expect.equal subject control "Sorting with insertion <> with bubble" ]
+                  Expect.equal subject control "Sorting with insertion <> with bubble"
+              testCase "Comparing qsort test"
+              <| fun _ ->
+                  let a: Task2.MyFuncList<int> = MyFuncRandList 20
+                  let b = a
+                  let control = Task2.MyFuncInsertionSort(<) a
+                  let subject = Task2.MyFuncQuickSort(<) b
+                  Expect.equal subject control "Sorting with insertion <> with qsort" ]

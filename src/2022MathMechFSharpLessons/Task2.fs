@@ -27,6 +27,11 @@ module Task2 =
             | Cons (a1, axs) when cmp a0 a1 -> Cons(a1, MyFuncInsertionSort cmp (Cons(a0, axs)))
             | a -> Cons(a0, a)
 
+    let rec MyFuncConCat a b =
+        match a with
+        | Empty -> b
+        | Cons (hd, tl) -> Cons(hd, MyFuncConCat tl b)
+
     let rec GetLength a =
         match a with
         | Empty -> 0
@@ -41,19 +46,55 @@ module Task2 =
             | Cons (a0, Cons (a1, axs)) -> Cons(a0, RaiseBubble cmp (Cons(a1, axs)))
 
         let len = GetLength a
-        let mutable ans = a // TODO: mutable is bad? Get rid of it, just in case
 
-        for i in 1..len do
-            ans <- RaiseBubble cmp ans
+        let rec recursiveLoop n f a =
+            if n = 1 then
+                f a
+            else
+                recursiveLoop (n - 1) f (f a)
 
-        ans
+        recursiveLoop len (RaiseBubble cmp) a // TODO: no mutable + no loop
+        // fold ~= recursiveLoop
 
-    // TODO: MyFuncQuickSort
+    // expects cmp to be asymmetric
+    let MyFuncQuickSort cmp a =
+        let rec partition cmp pivot a =
+            match a with
+            | Cons (a0, axs) when cmp pivot a0 ->
+                let f, s = partition cmp pivot axs
+                Cons(a0, f), s
+            | Cons (a0, axs) ->
+                let f, s = partition cmp pivot axs
+                f, Cons(a0, s)
+            | _ -> Empty, Empty
 
-    let rec MyFuncConCat a b =
-        match a with
-        | Empty -> b
-        | Cons (hd, tl) -> Cons(hd, MyFuncConCat tl b)
+        let rec qsort cmp a =
+            match a with
+            | Cons (a0, Empty) -> a
+            | Cons (a0, Cons (a1, Empty)) ->
+                if cmp a0 a1 then
+                    Cons(a1, Cons(a0, Empty))
+                else
+                    Cons(a0, Cons(a1, Empty))
+            | Cons (a0, _) ->
+                let firstHalf, secondHalf =
+                    match partition cmp a0 a with
+                    | Empty, _ ->
+                        if cmp (a0 + 1) a0 then
+                            partition cmp (a0 + 1) a
+                        else
+                            partition cmp (a0 - 1) a
+                    | _, Empty ->
+                        if cmp a0 (a0 + 1) then
+                            partition cmp (a0 + 1) a
+                        else
+                            partition cmp (a0 - 1) a
+                    | f, s -> f, s
+
+                MyFuncConCat(qsort cmp firstHalf) (qsort cmp secondHalf) // TODO: no concat...
+            | _ -> Empty
+
+        qsort cmp a
 
     // OOP implementation of list
     type IList<'value> =
