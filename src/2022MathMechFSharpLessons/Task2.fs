@@ -54,7 +54,7 @@ module Task2 =
                 recursiveLoop (n - 1) f (f a)
 
         recursiveLoop len (RaiseBubble cmp) a // TODO: no mutable + no loop
-        // fold ~= recursiveLoop
+    // fold ~= recursiveLoop
 
     // expects cmp to be asymmetric
     let MyFuncQuickSort cmp a =
