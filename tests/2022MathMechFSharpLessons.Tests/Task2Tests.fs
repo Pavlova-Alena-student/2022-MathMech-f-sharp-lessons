@@ -3,54 +3,52 @@ namespace _2022MathMechFSharpLessons.Tests
 open Expecto
 open _2022MathMechFSharpLessons
 
-// TODO!!!
 module Task2Tests =
     open Task2
+    open OOPList
+    open FuncList
 
     [<Tests>]
     let tests =
         testList
             "samples"
-            [ testCase "Length test"
+            [ testCase "Functional length test"
               <| fun _ ->
-                  let a: Task2.MyFuncList<int> = Cons(4, Cons(3, Cons(9, Empty)))
-                  let subject = Task2.GetLength a
+                  let a: List<int> = Cons(4, Cons(3, Cons(9, Empty)))
+                  let subject = GetLength a
                   Expect.equal subject 3 "Failed to get length of a functional list"
-              testCase "Concatination test"
+              testCase "Functional concatination test"
               <| fun _ ->
-                  let a: Task2.MyFuncList<int> = Cons(4, Cons(3, Cons(9, Empty)))
-                  let b: Task2.MyFuncList<int> = Cons(4, Cons(3, Cons(9, Empty)))
-                  let subject = Task2.MyFuncConCat a b
+                  let a: List<int> = Cons(4, Cons(3, Cons(9, Empty)))
+                  let b: List<int> = Cons(4, Cons(3, Cons(9, Empty)))
+                  let subject = ConCat a b
 
                   Expect.equal
                       subject
                       (Cons(4, Cons(3, Cons(9, Cons(4, Cons(3, Cons(9, Empty)))))))
                       "Failed to concat two functional lists"
-              testCase "Insertion sort test"
+              testCase "Functional insertion sort test"
               <| fun _ ->
-                  let a: Task2.MyFuncList<int> = Cons(4, Cons(3, Cons(9, Empty)))
-                  let subject = Task2.MyFuncInsertionSort(>) a
+                  let a: List<int> = Cons(4, Cons(3, Cons(9, Empty)))
+                  let subject = InsertionSort(>) a
 
-                  Expect.equal
-                      subject
-                      (Cons(3, Cons(4, Cons(9, Empty))))
-                      "Failed to sort a functional listv (insertion)"
-              testCase "Bubble sort test"
+                  Expect.equal subject (Cons(3, Cons(4, Cons(9, Empty)))) "Failed to sort a functional list (insertion)"
+              testCase "Functional bubble sort test"
               <| fun _ ->
-                  let a: Task2.MyFuncList<int> = Cons(4, Cons(3, Cons(9, Empty)))
-                  let subject = Task2.MyFuncBubbleSort(>) a
+                  let a: List<int> = Cons(4, Cons(3, Cons(9, Empty)))
+                  let subject = BubbleSort(>) a
                   Expect.equal subject (Cons(3, Cons(4, Cons(9, Empty)))) "Failed to sort a functional list (bubble)"
-              testCase "Comparing sort test"
+              testCase "Comparing functional sort test"
               <| fun _ ->
-                  let a: Task2.MyFuncList<int> = MyFuncRandList 20
+                  let a: List<int> = RandList 20
                   let b = a
-                  let control = Task2.MyFuncInsertionSort(>) a
-                  let subject = Task2.MyFuncBubbleSort(>) b
-                  Expect.equal subject control "Sorting with insertion <> with bubble"
-              testCase "Comparing qsort test"
+                  let control = InsertionSort(>) a
+                  let subject = BubbleSort(>) b
+                  Expect.equal subject control "Sorting functional list with insertion <> with bubble"
+              testCase "Comparing functional qsort test"
               <| fun _ ->
-                  let a: Task2.MyFuncList<int> = MyFuncRandList 20
+                  let a: List<int> = RandList 20
                   let b = a
-                  let control = Task2.MyFuncInsertionSort(<) a
-                  let subject = Task2.MyFuncQuickSort(<) b
-                  Expect.equal subject control "Sorting with insertion <> with qsort" ]
+                  let control = InsertionSort(<) a
+                  let subject = QuickSort(<) b
+                  Expect.equal subject control "Sorting functional list with insertion <> with qsort" ]
