@@ -4,7 +4,8 @@ open System
 
 module OOPList =
     // OOP implementation of list
-    type IList<'value> =
+    [<CustomEquality>]
+    type IList<'value when 'value: equality> =
         interface
         end
 
@@ -13,8 +14,28 @@ module OOPList =
         member this.Head = head
         member this.Tail = tail
 
+        override this.GetHashCode() : int =
+            this.Head.GetHashCode() * 3
+            + this.Tail.GetHashCode() * 103
+
+        override this.Equals<'value>(other) =
+            match other with
+            | :? NonEmptyList<'value> as other ->
+                (this.Head = other.Head)
+                & (this.Tail = other.Tail)
+            | _ -> false
+
     type EmptyList<'value>() =
         interface IList<'value>
+
+    (*
+        override this.GetHashCode() = 0
+
+        override this.Equals(other) =
+            match other with
+            | :? EmptyList<'value> -> true
+            | _ -> false
+*)
 
     type UnknownListTypeException() =
         inherit Exception("Unknown list type")
@@ -28,10 +49,9 @@ module OOPList =
     // pages 193-194 from Kris Smit
     type IComparer<'value> =
         interface
-            abstract member Compare: ('value -> 'value) -> int
+            abstract member Compare: 'value -> 'value -> bool
         end
 
-    // send help
     let rec BubbleSort<'value> (cmp: IComparer<'value>) (lst: IList<'value>) =
         let rec RaiseBubble (cmp: IComparer<'value>) (lst: IList<'value>) =
             match lst with
@@ -42,27 +62,51 @@ module OOPList =
                 | :? NonEmptyList<'value> as tl ->
                     if cmp.Compare lst.Head tl.Head then
                         RaiseBubble cmp (NonEmptyList<'value>(tl.Head, NonEmptyList<'value>(lst.Head, tl.Tail)))
+                        |> ignore
+
                         1
                     else
                         RaiseBubble cmp lst
                 | _ -> raise <| new UnknownListTypeException()
             | _ -> raise <| new UnknownListTypeException()
 
-        RaiseBubble cmp lst // TODO: for
+        while RaiseBubble cmp lst = 1 do
+            ignore 0
 
-//[<AbstractClass>]
-(*type IMyOOPListSortAlgorithm<'value> =
+
+    let rec QuickSort<'value> (cmp: IComparer<'value>) (lst: IList<'value>) : IList<'value> =
+        let rec partition
+            (cmp: IComparer<'value>)
+            (pivot: 'value)
+            (lst: IList<'value>)
+            : IList<'value> * IList<'value> =
+            match lst with
+            | :? NonEmptyList<'value> as lst when cmp.Compare pivot lst.Head ->
+                let f, s = partition cmp pivot lst.Tail
+                NonEmptyList<'value>(lst.Head, f), s
+            | :? NonEmptyList<'value> as lst ->
+                let f, s = partition cmp pivot lst.Tail
+                f, NonEmptyList<'value>(lst.Head, s)
+            | _ -> EmptyList<'value>(), EmptyList<'value>()
+
+        let rec qsort (cmp: IComparer<'value>) (lst: IList<'value>) : IList<'value> =
+            match lst with
+            | :? NonEmptyList<'value> as lst ->
+                match lst.Tail with
+                | :? EmptyList<'value> -> lst
+                | :? NonEmptyList<'value> as tl -> EmptyList<'value>()
+            | _ -> EmptyList<'value>()
+
+        qsort cmp lst
+
+(* Hmm... TODO!
+    [<AbstractClass>]
+    type IListSortAlgorithm<'value> =
         interface
             abstract member op_LParenRParen: (IComparer<'value> * IList<'value>) -> bool
         end
 
-    type MyOOPBubbleSort<'value> =
-        interface IMyOOPListSortAlgorithm<'value> with
+    type BubbleSort<'value> =
+        interface IListSortAlgorithm<'value> with
             member this.op_LParenRParen(cmp, lst) = true
-
-    type MyOOPQuickSort<'value> =
-        interface IMyOOPListSortAlgorithm<'value> with
-            member this.op_LParenRParen(cmp, lst) = true
-
-    type MyOOPConCat<'value> =
-        member this.op_LParenRParen first second = first*)
+*)
