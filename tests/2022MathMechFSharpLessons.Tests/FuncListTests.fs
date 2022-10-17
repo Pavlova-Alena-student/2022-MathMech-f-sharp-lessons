@@ -7,6 +7,11 @@ module FuncListTests =
     open Task2
     open FuncList
 
+    let rec IsSorted cmp lst =
+        match lst with
+        | Cons (a0, Cons (a1, axs)) -> (cmp a0 a1) && (IsSorted cmp (Cons(a1, axs)))
+        | _ -> true
+
     [<Tests>]
     let tests =
         testList
@@ -26,44 +31,53 @@ module FuncListTests =
                       subject
                       (Cons(4, Cons(3, Cons(9, Cons(4, Cons(3, Cons(9, Empty)))))))
                       "Failed to concat two functional lists"
-              testCase "Functional insertion sort test"
+              testCase "Small functional insertion sort test"
               <| fun _ ->
                   let a: List<int> = Cons(4, Cons(3, Cons(9, Empty)))
-                  let subject = InsertionSort(>) a
+                  let subject = InsertionSort(<) a
 
                   Expect.equal subject (Cons(3, Cons(4, Cons(9, Empty)))) "Failed to sort a functional list (insertion)"
-              testCase "Functional bubble sort test"
+              testCase "Small functional bubble sort test"
               <| fun _ ->
                   let a: List<int> = Cons(4, Cons(3, Cons(9, Empty)))
-                  let subject = BubbleSort(>) a
+                  let subject = BubbleSort(<) a
                   Expect.equal subject (Cons(3, Cons(4, Cons(9, Empty)))) "Failed to sort a functional list (bubble)"
               testCase "Comparing functional sort test"
               <| fun _ ->
-                  let a: List<int> = RandList 20
+                  let a: List<int> = RandList 30
                   let b = a
                   let control = InsertionSort(>) a
                   let subject = BubbleSort(>) b
                   Expect.equal subject control "Sorting functional list with insertion <> with bubble"
+                  Expect.isTrue (IsSorted(>) subject) "Bubble sort didn't sort!"
               testCase "Comparing functional qsort test"
               <| fun _ ->
-                  let a: List<int> = RandList 20
+                  let a: List<int> = RandList 30
                   let b = a
                   let control = InsertionSort(<) a
                   let subject = QuickSort(<) b
                   Expect.equal subject control "Sorting functional list with insertion <> with qsort"
-              testCase "Empty list functional qsort test"
+                  Expect.isTrue (IsSorted(<) subject) "Quick sort didn't sort!"
+              testCase "Empty list functional sort test"
               <| fun _ ->
+                  let control = Empty
                   let a: List<int> = Empty
-                  let b = a
-                  let control = InsertionSort(<) a
-                  let subject = QuickSort(<) b
-                  Expect.equal subject control "Sorting functional list with insertion <> with qsort"
+                  let subjectIS = InsertionSort(<) a
+                  let a: List<int> = Empty
+                  let subjectBS = BubbleSort(<) a
+                  let a: List<int> = Empty
+                  let subjectQS = QuickSort(<) a
+                  Expect.equal subjectIS control "Sorting empty functional list with insertion failed"
+                  Expect.equal subjectBS control "Sorting empty functional list with bubbles failed"
+                  Expect.equal subjectQS control "Sorting empty functional list with quicksort failed"
               testCase "Equal list functional qsort test"
               <| fun _ ->
-                  let a: List<int> = Cons(3, Cons(3, Cons(3, Empty)))
+                  let a: List<int> = GenerateList(fun _ -> 3) 5
                   let b = a
+                  let c = a
                   let control = InsertionSort(<) a
                   let subject1 = BubbleSort(<) b
-                  let subject2 = QuickSort(<) b
+                  let subject2 = QuickSort(<) c
                   Expect.equal subject1 control "Sorting functional list with insertion <> with bubble sort"
-                  Expect.equal subject2 control "Sorting functional list with insertion <> with qsort" ]
+                  Expect.equal subject2 control "Sorting functional list with insertion <> with qsort"
+                  Expect.equal (Cons(3, Cons(3, Cons(3, Cons(3, Cons(3, Empty)))))) control "Control list is invalid" ]

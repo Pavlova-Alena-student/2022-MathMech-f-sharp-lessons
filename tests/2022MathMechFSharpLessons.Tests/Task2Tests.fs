@@ -21,4 +21,4 @@ module Task2Tests =
               <| fun _ ->
                   let a = NonEmptyList(4, NonEmptyList(3, NonEmptyList(9, EmptyList<int>())))
                   let subject = getOOPListFromFuncList <| getFuncListFromOOPList a
-                  Expect.equal subject a "Failed oop-func-oop list equivalence test" ]
+                  Expect.isTrue (Compare subject a) "Failed oop-func-oop list equivalence test" ]

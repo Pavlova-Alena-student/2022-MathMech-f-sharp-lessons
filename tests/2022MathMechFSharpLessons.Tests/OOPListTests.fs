@@ -23,15 +23,16 @@ module OOPListTests =
                   let b = NonEmptyList(4, NonEmptyList(3, NonEmptyList(9, EmptyList<int>())))
                   let subject: IList<int> = ConCat a b
 
-                  Expect.equal
-                      subject
-                      (NonEmptyList(
-                          4,
-                          NonEmptyList(
-                              3,
-                              NonEmptyList(9, NonEmptyList(4, NonEmptyList(3, NonEmptyList(9, EmptyList<int>()))))
-                          )
-                      ))
+                  Expect.isTrue
+                      (Compare
+                          subject
+                          (NonEmptyList(
+                              4,
+                              NonEmptyList(
+                                  3,
+                                  NonEmptyList(9, NonEmptyList(4, NonEmptyList(3, NonEmptyList(9, EmptyList<int>()))))
+                              )
+                          )))
                       "Failed to concat two OOP lists" ]
 
 (*
