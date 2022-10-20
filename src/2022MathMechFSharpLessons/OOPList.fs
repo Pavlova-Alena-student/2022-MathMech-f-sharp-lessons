@@ -19,6 +19,18 @@ module OOPList =
     type UnknownListTypeException() =
         inherit Exception("Unknown list type")
 
+    /// Generates a list. Generator should take one argument - reversed no. of current element and return an element on that place
+    let rec GenerateList (rGenerator: int -> int) (length: int) : IList<int> =
+        if length = 0 then
+            EmptyList<int>()
+        else
+            NonEmptyList<int>(rGenerator length, GenerateList rGenerator (length - 1))
+
+    /// Generates a list of random integer numbers from -500 to 499
+    let RandList (length: int) =
+        let rng = new Random()
+        GenerateList(fun _ -> rng.Next() % 1000 - 500) length
+
     let rec GetLength (lst: IList<'value>) =
         match lst with
         | :? EmptyList<'value> -> 0
@@ -51,7 +63,7 @@ module OOPList =
             abstract member sort: IComparer<'value> -> IList<'value> -> IList<'value>
         end
 
-    let rec BubbleSort<'value> (cmp: IComparer<'value>) (lst: IList<'value>) =
+    type BubbleSort<'value>() =
         let rec RaiseBubble (cmp: IComparer<'value>) (lst: IList<'value>) : IList<'value> =
             match lst with
             | :? EmptyList<'value> -> EmptyList<'value>()
@@ -66,17 +78,17 @@ module OOPList =
                 | _ -> raise <| new UnknownListTypeException()
             | _ -> raise <| new UnknownListTypeException()
 
-        let len = GetLength lst
-
         let rec recursiveLoop n f a =
-            if n = 1 then
-                f a
+            if n = 0 then
+                a
             else
                 recursiveLoop (n - 1) f (f a)
 
-        recursiveLoop len (RaiseBubble cmp) lst
+        interface IListSortAlgorithm<'value> with
+            member this.sort (cmp: IComparer<'value>) (lst: IList<'value>) =
+                recursiveLoop (GetLength lst) (RaiseBubble cmp) lst
 
-    let rec QuickSort<'value> (cmp: IComparer<'value>) (lst: IList<'value>) : IList<'value> =
+    type QuickSort<'value>() =
         let rec partition
             (cmp: IComparer<'value>)
             (pivot: 'value)
@@ -99,27 +111,18 @@ module OOPList =
                 | :? EmptyList<'value> -> lst
                 | :? NonEmptyList<'value> as tl ->
                     let pivot = lst.Head
-                    let f, s = partition cmp pivot lst
+                    let f, s = partition cmp pivot (lst.Tail)
 
-                    let f, s =
-                        if (f :? EmptyList<'value>) then
-                            if not <| cmp.Compare(pivot + 1) pivot then
-                                partition cmp (pivot + 1) lst
-                            else
-                                partition cmp (pivot - 1) lst
-                        elif (s :? EmptyList<'value>) then
-                            if not <| cmp.Compare pivot (pivot + 1) then
-                                partition cmp (pivot + 1) lst
-                            else
-                                partition cmp (pivot - 1) lst
-                        else
-                            f, s
-
-                    if (f :? EmptyList<'value>) then s
-                    elif (s :? EmptyList<'value>) then f
-                    else ConCat f s
+                    if (f :? EmptyList<'value>) then
+                        NonEmptyList<'value>(pivot, qsort cmp s)
+                    elif (s :? EmptyList<'value>) then
+                        ConCat(qsort cmp f)
+                        <| NonEmptyList<'value>(pivot, EmptyList())
+                    else
+                        ConCat(qsort cmp f) (NonEmptyList<'value>(pivot, qsort cmp s))
                 | _ -> raise <| UnknownListTypeException()
             | :? EmptyList<'value> -> EmptyList<'value>()
             | _ -> raise <| UnknownListTypeException()
 
-        qsort cmp lst
+        interface IListSortAlgorithm<'value> with
+            member this.sort (cmp: IComparer<'value>) (lst: IList<'value>) = qsort cmp lst

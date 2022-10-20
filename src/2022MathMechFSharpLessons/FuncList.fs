@@ -8,12 +8,12 @@ module FuncList =
         | Cons of head: 'value * tail: List<'value>
         | Empty
 
-    /// Generates a list. Generator should take one argument - no. of current element and return an element on that place
-    let rec GenerateList generator length =
+    /// Generates a list. Generator should take one argument - reversed no. of current element and return an element on that place
+    let rec GenerateList rGenerator length =
         if length = 0 then
             Empty
         else
-            Cons(generator length, GenerateList generator (length - 1))
+            Cons(rGenerator length, GenerateList rGenerator (length - 1))
 
     /// Generates a list of random integer numbers from -500 to 499
     let RandList length =
@@ -53,8 +53,8 @@ module FuncList =
         let len = GetLength a
 
         let rec recursiveLoop n f a =
-            if n = 1 then
-                f a
+            if n = 0 then
+                a
             else
                 recursiveLoop (n - 1) f (f a)
 
@@ -75,25 +75,13 @@ module FuncList =
         let rec qsort cmp a =
             match a with
             | Cons (a0, Empty) -> a
-            | Cons (a0, _) ->
-                let firstHalf, secondHalf =
-                    match partition cmp a0 a with
-                    | Empty, _ ->
-                        if not <| cmp (a0 + 1) a0 then
-                            partition cmp (a0 + 1) a
-                        else
-                            partition cmp (a0 - 1) a
-                    | _, Empty ->
-                        if not <| cmp a0 (a0 + 1) then
-                            partition cmp (a0 + 1) a
-                        else
-                            partition cmp (a0 - 1) a
-                    | f, s -> f, s
+            | Cons (a0, axs) ->
+                let firstHalf, secondHalf = partition cmp a0 axs
 
                 match firstHalf, secondHalf with
-                | Empty, nonempty
-                | nonempty, Empty -> nonempty
-                | _ -> ConCat(qsort cmp firstHalf) (qsort cmp secondHalf) // TODO: think about a way not to use concat...
+                | Empty, nonempty -> Cons(a0, (qsort cmp nonempty))
+                | nonempty, Empty -> ConCat(qsort cmp nonempty) (Cons(a0, Empty))
+                | _ -> ConCat(qsort cmp firstHalf) (Cons(a0, (qsort cmp secondHalf))) // TODO: think about a way not to use concat...
             | _ -> Empty
 
         qsort cmp a

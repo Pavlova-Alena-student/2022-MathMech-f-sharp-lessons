@@ -9,7 +9,9 @@ module FuncListTests =
 
     let rec IsSorted cmp lst =
         match lst with
-        | Cons (a0, Cons (a1, axs)) -> (cmp a0 a1) && (IsSorted cmp (Cons(a1, axs)))
+        | Cons (a0, Cons (a1, axs)) ->
+            ((cmp a0 a1) || (not <| cmp a1 a0))
+            && (IsSorted cmp (Cons(a1, axs)))
         | _ -> true
 
     [<Tests>]
@@ -70,14 +72,21 @@ module FuncListTests =
                   Expect.equal subjectIS control "Sorting empty functional list with insertion failed"
                   Expect.equal subjectBS control "Sorting empty functional list with bubbles failed"
                   Expect.equal subjectQS control "Sorting empty functional list with quicksort failed"
-              testCase "Equal list functional qsort test"
+              testCase "Equal list functional insertion sort test"
               <| fun _ ->
                   let a: List<int> = GenerateList(fun _ -> 3) 5
-                  let b = a
-                  let c = a
-                  let control = InsertionSort(<) a
-                  let subject1 = BubbleSort(<) b
-                  let subject2 = QuickSort(<) c
-                  Expect.equal subject1 control "Sorting functional list with insertion <> with bubble sort"
-                  Expect.equal subject2 control "Sorting functional list with insertion <> with qsort"
-                  Expect.equal (Cons(3, Cons(3, Cons(3, Cons(3, Cons(3, Empty)))))) control "Control list is invalid" ]
+                  let subject = InsertionSort(<) a
+                  let control = Cons(3, Cons(3, Cons(3, Cons(3, Cons(3, Empty)))))
+                  Expect.equal subject control "Insertion sort can't sort list of equal elements"
+              testCase "Equal list functional bubble sort test"
+              <| fun _ ->
+                  let a: List<int> = GenerateList(fun _ -> 3) 5
+                  let subject = BubbleSort(<) a
+                  let control = Cons(3, Cons(3, Cons(3, Cons(3, Cons(3, Empty)))))
+                  Expect.equal subject control "Bubble sort can't sort list of equal elements"
+              testCase "Equal list functional quick sort test"
+              <| fun _ ->
+                  let a: List<int> = GenerateList(fun _ -> 3) 5
+                  let subject = QuickSort(<) a
+                  let control = Cons(3, Cons(3, Cons(3, Cons(3, Cons(3, Empty)))))
+                  Expect.equal subject control "Quick sort can't sort list of equal elements" ]
