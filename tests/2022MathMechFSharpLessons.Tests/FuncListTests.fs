@@ -1,7 +1,7 @@
-namespace _2022MathMechFSharpLessons.Tests
+namespace MathMechFSharpLessons.Tests
 
 open Expecto
-open _2022MathMechFSharpLessons
+open MathMechFSharpLessons
 
 module FuncListTests =
     open Task2
@@ -23,6 +23,8 @@ module FuncListTests =
                   let a: List<int> = Cons(4, Cons(3, Cons(9, Empty)))
                   let subject = GetLength a
                   Expect.equal subject 3 "Failed to get length of a functional list"
+                  let subject = GetLength Empty
+                  Expect.equal subject 0 "Length of empty list should be 0"
               testCase "Functional concatination test"
               <| fun _ ->
                   let a: List<int> = Cons(4, Cons(3, Cons(9, Empty)))
@@ -33,6 +35,11 @@ module FuncListTests =
                       subject
                       (Cons(4, Cons(3, Cons(9, Cons(4, Cons(3, Cons(9, Empty)))))))
                       "Failed to concat two functional lists"
+
+                  Expect.equal
+                      (GetLength subject)
+                      ((GetLength a) + (GetLength b))
+                      "Length of concatinated functional list is not sum of lengthes of two functional lists"
               testCase "Small functional insertion sort test"
               <| fun _ ->
                   let a: List<int> = Cons(4, Cons(3, Cons(9, Empty)))
@@ -52,6 +59,7 @@ module FuncListTests =
                   let subject = BubbleSort(>) b
                   Expect.equal subject control "Sorting functional list with insertion <> with bubble"
                   Expect.isTrue (IsSorted(>) subject) "Bubble sort didn't sort!"
+                  Expect.equal (GetLength subject) 30 "Bubble sort changed length!"
               testCase "Comparing functional qsort test"
               <| fun _ ->
                   let a: List<int> = RandList 30
@@ -60,6 +68,7 @@ module FuncListTests =
                   let subject = QuickSort(<) b
                   Expect.equal subject control "Sorting functional list with insertion <> with qsort"
                   Expect.isTrue (IsSorted(<) subject) "Quick sort didn't sort!"
+                  Expect.equal (GetLength subject) 30 "Quick sort changed length!"
               testCase "Empty list functional sort test"
               <| fun _ ->
                   let control = Empty
@@ -78,15 +87,18 @@ module FuncListTests =
                   let subject = InsertionSort(<) a
                   let control = Cons(3, Cons(3, Cons(3, Cons(3, Cons(3, Empty)))))
                   Expect.equal subject control "Insertion sort can't sort list of equal elements"
+                  Expect.equal (GetLength subject) 5 "Insertion sort changed length of a list!"
               testCase "Equal list functional bubble sort test"
               <| fun _ ->
                   let a: List<int> = GenerateList(fun _ -> 3) 5
                   let subject = BubbleSort(<) a
                   let control = Cons(3, Cons(3, Cons(3, Cons(3, Cons(3, Empty)))))
                   Expect.equal subject control "Bubble sort can't sort list of equal elements"
+                  Expect.equal (GetLength subject) 5 "Bubble sort changed length of a list!"
               testCase "Equal list functional quick sort test"
               <| fun _ ->
                   let a: List<int> = GenerateList(fun _ -> 3) 5
                   let subject = QuickSort(<) a
                   let control = Cons(3, Cons(3, Cons(3, Cons(3, Cons(3, Empty)))))
-                  Expect.equal subject control "Quick sort can't sort list of equal elements" ]
+                  Expect.equal subject control "Quick sort can't sort list of equal elements"
+                  Expect.equal (GetLength subject) 5 "Quick sort changed length of a list!" ]

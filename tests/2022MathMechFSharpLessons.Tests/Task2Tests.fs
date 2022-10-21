@@ -1,7 +1,7 @@
-namespace _2022MathMechFSharpLessons.Tests
+namespace MathMechFSharpLessons.Tests
 
 open Expecto
-open _2022MathMechFSharpLessons
+open MathMechFSharpLessons
 
 module Task2Tests =
     open Task2

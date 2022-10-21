@@ -1,4 +1,4 @@
-namespace _2022MathMechFSharpLessons
+namespace MathMechFSharpLessons
 
 module Task2 =
     let rec getFuncListFromOOPList<'value> (lst: OOPList.IList<'value>) =

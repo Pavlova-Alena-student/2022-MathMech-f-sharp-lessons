@@ -1,4 +1,4 @@
-namespace _2022MathMechFSharpLessons
+namespace MathMechFSharpLessons
 
 open System
 
@@ -81,7 +81,7 @@ module FuncList =
                 match firstHalf, secondHalf with
                 | Empty, nonempty -> Cons(a0, (qsort cmp nonempty))
                 | nonempty, Empty -> ConCat(qsort cmp nonempty) (Cons(a0, Empty))
-                | _ -> ConCat(qsort cmp firstHalf) (Cons(a0, (qsort cmp secondHalf))) // TODO: think about a way not to use concat...
+                | _ -> ConCat(qsort cmp firstHalf) (Cons(a0, (qsort cmp secondHalf)))
             | _ -> Empty
 
         qsort cmp a

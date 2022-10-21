@@ -1,4 +1,4 @@
-namespace _2022MathMechFSharpLessons
+namespace MathMechFSharpLessons
 
 open System
 
@@ -69,7 +69,7 @@ module OOPList =
             | :? EmptyList<'value> -> EmptyList<'value>()
             | :? NonEmptyList<'value> as lst ->
                 match lst.Tail with
-                | :? EmptyList<'value> -> EmptyList<'value>()
+                | :? EmptyList<'value> -> lst
                 | :? NonEmptyList<'value> as tl ->
                     if not <| cmp.Compare lst.Head tl.Head then
                         NonEmptyList<'value>(tl.Head, RaiseBubble cmp (NonEmptyList<'value>(lst.Head, tl.Tail)))
