@@ -20,6 +20,16 @@ module FuncList =
         let rng = new Random()
         GenerateList(fun _ -> rng.Next() % 1000 - 500) length
 
+    // Trying to concat 2 unsorted lists = UB
+    let rec fuseSorted cmp a b =
+        match a with
+        | Empty -> b
+        | Cons (a0, axs) ->
+            match b with
+            | Empty -> a
+            | Cons (b0, bxs) when cmp a0 b0 -> Cons(a0, fuseSorted cmp axs b)
+            | Cons (b0, bxs) -> Cons(b0, fuseSorted cmp a bxs)
+
     // For testing: insersion sort
     // expects cmp to be asymmetric
     let rec InsertionSort cmp a =
