@@ -8,8 +8,4 @@ module Task3Tests =
     open Task3
 
     [<Tests>]
-    let tests =
-        testList
-            "samples"
-            [ testCase "Sample2"
-              <| fun _ -> Expect.equal 0 0 "0<>0" ]
+    let tests = testList "samples" []

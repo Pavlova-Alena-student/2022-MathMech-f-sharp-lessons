@@ -8,6 +8,8 @@ module FuncList =
         | Cons of head: 'value * tail: List<'value>
         | Empty
 
+    // TODO: type SortedList<'value> = List<'value>
+
     /// Generates a list. Generator should take one argument - reversed no. of current element and return an element on that place
     let rec GenerateList rGenerator length =
         if length = 0 then
@@ -29,6 +31,14 @@ module FuncList =
             | Empty -> a
             | Cons (b0, bxs) when cmp a0 b0 -> Cons(a0, fuseSorted cmp axs b)
             | Cons (b0, bxs) -> Cons(b0, fuseSorted cmp a bxs)
+
+    // Trying to detete from unsorted list = UB
+    let rec deleteEqual lst =
+        match lst with
+        | Empty -> lst
+        | Cons (_, Empty) -> lst
+        | Cons (a0, Cons (a1, axs)) when a0 = a1 -> deleteEqual (Cons(a0, axs))
+        | Cons (a0, axs) -> Cons(a0, deleteEqual axs)
 
     // For testing: insersion sort
     // expects cmp to be asymmetric

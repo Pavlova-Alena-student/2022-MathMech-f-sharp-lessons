@@ -10,5 +10,11 @@ module TreeTests =
     let tests =
         testList
             "samples"
-            [ testCase "Sample1"
-              <| fun _ -> Expect.equal 0 0 "0<>0" ]
+            [ testCase "Tree with equal elements"
+              <| fun _ ->
+                  let tree = genRangedTree 3 10 (fun _ -> 777)
+
+                  Expect.equal
+                      (getListOfDifferent tree)
+                      (FuncList.Cons(777, FuncList.Empty))
+                      "Tree with every value 777 should have all elements equal to 777" ]
