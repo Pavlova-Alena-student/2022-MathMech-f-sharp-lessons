@@ -11,6 +11,7 @@
         <Compile Include="FuncListTests.fs" />
         <Compile Include="OOPListTests.fs" />
         <Compile Include="Task2Tests.fs" />
+        <Compile Include="LinAlgTests.fs" />
         <Compile Include="Main.fs" />
     </ItemGroup>
     <ItemGroup>
