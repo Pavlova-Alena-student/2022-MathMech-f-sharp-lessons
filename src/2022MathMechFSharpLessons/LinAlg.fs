@@ -22,36 +22,75 @@ module LinAlg =
     
     //  This is not sparse at all, I still need to add relaxation XD
 
-    type _VectorBinTree<'elementType when 'elementType: equality>(arr: 'elementType list) =
+    type _VectorBinTree<'elementType when 'elementType: equality>(a0: _VectorBinTree<'elementType>, a1: _VectorBinTree<'elementType> option) =
         struct
-            //if arr.size < 1 then
-            //    raize <| Exception("Can't create vector of 0 size")
-            member this.size: int = List.length arr
-            member this._actualSize = _getMin2Pow (this.size)
+            member this.size: int = 0
+            member this._actualSize: int = 0
+            member this.left: _VectorBinTree<'elementType> = a0
+            member this.right: _VectorBinTree<'elementType> option = a1
+            member this.value: 'elementType option = None
+            member this.depth: int = 0
 
-            member this.left: _VectorBinTree<'elementType> option =
-                if this.size > 1 then
-                    Some(_VectorBinTree (arr.[.. (this._actualSize / 2)]))
-                else
-                    None
+            // FIXME: add private
+            member new(arr: 'elementType list, currentSize: int) = 
+                (*member this.size: int = List.length arr
+                member this._actualSize = currentSize
 
-            member this.right: _VectorBinTree<'elementType> option =
-                if this.size > 2 then
-                    Some(_VectorBinTree (arr.[(this._actualSize / 2) ..]))
-                else
-                    None
+                member this.left: _VectorBinTree<'elementType> option =
+                    if this.size > 0 then
+                        Some(_VectorBinTree (arr.[.. (this._actualSize / 2)]))
+                    else
+                        None
 
-            member this.value: 'elementType option =
-                if this.size = 1 then
-                    Some(arr.[0])
-                else
-                    None
+                member this.right: _VectorBinTree<'elementType> option =
+                    if this.size > 1 then
+                        Some(_VectorBinTree (arr.[(this._actualSize / 2) ..]))
+                    else
+                        None
 
-            member this.depth: int =
-                if this.left.IsSome then
-                    this.left.Value.depth + 1
-                else
-                    0
+                member this.value: 'elementType option =
+                    if this.size = 1 then
+                        Some(arr.[0])
+                    else
+                        None
+
+                member this.depth: int =
+                    if this.left.IsSome then
+                        this.left.Value.depth + 1
+                    else
+                        0*) 
+                new(Some(_VectorBinTree (arr.[.. (this._actualSize / 2)])), Some(_VectorBinTree (arr.[(this._actualSize / 2) ..])))
+
+            member new(arr: 'elementType list) = 
+                if arr.size < 1 then
+                    raize <| Exception("Can't create vector of 0 size")
+                member this.size: int = List.length arr
+                member this._actualSize = _getMin2Pow (this.size)
+
+                member this.left: _VectorBinTree<'elementType> option =
+                    if this.size > 0 then
+                        Some(_VectorBinTree (arr.[.. (this._actualSize / 2)]))
+                    else
+                        None
+
+                member this.right: _VectorBinTree<'elementType> option =
+                    if this.size > 1 then
+                        Some(_VectorBinTree (arr.[(this._actualSize / 2) ..]))
+                    else
+                        None
+
+                member this.value: 'elementType option =
+                    if this.size = 1 then
+                        Some(arr.[0])
+                    else
+                        None
+
+                member this.depth: int =
+                    if this.left.IsSome then
+                        this.left.Value.depth + 1
+                    else
+                        0
+
         end
 
     type Vector<'elementType when 'elementType: equality>(arr: 'elementType list) =
@@ -59,7 +98,8 @@ module LinAlg =
             member this.tree = _VectorBinTree<'elementType> (arr)
         end
 
-    type _MatrixQuadTree<'elementType when 'elementType: equality>(arr: 'elementType list list) =
+    type _MatrixQuadTree<'elementType when 'elementType: equality>(a00: _VectorBinTree<'elementType>, a01: _VectorBinTree<'elementType> option, a10: _VectorBinTree<'elementType> option, a11: _VectorBinTree<'elementType> option) =
+        struct      (arr: 'elementType list list) =
         struct
             member this.sizeH: int = List.length arr
             member this.sizeW: int = List.length arr.[0]
