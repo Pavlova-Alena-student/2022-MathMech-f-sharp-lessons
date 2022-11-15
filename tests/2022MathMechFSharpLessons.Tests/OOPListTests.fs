@@ -30,10 +30,21 @@ module OOPListTests =
         | :? EmptyList<'value> -> true
         | _ -> raise <| UnknownListTypeException()
 
+    (*
+    let properties =
+    testList "OOPList properties" [
+    testProperty "Sorted functional list is sorted" <| fun cmp sortF lst ->
+      IsSorted cmp (sortF cmp lst)
+
+    testProperty "Sorted functional list has same size as original" <| fun cmp sortF lst ->
+      GetLength lst = GetLength (sortF cmp lst)
+    ]
+*)
+
     [<Tests>]
     let tests =
         testList
-            "samples"
+            "OOP sample tests"
             [ testCase "OOP length test"
               <| fun _ ->
                   let a = NonEmptyList(4, NonEmptyList(3, NonEmptyList(9, EmptyList<int>())))
