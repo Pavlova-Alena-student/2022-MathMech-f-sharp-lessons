@@ -1,6 +1,8 @@
 namespace MathMechFSharpLessons.Tests
 
 open Expecto
+open Expecto.ExpectoFsCheck
+open FsCheck
 open MathMechFSharpLessons
 
 module FuncListTests =
@@ -56,7 +58,7 @@ module FuncListTests =
 
                   Expect.equal subject (Cons(3, Cons(4, Cons(9, Empty)))) "Failed to sort a functional list (bubble)"
 
-              testCase "Comparing functional sort test"
+              testCase "Comparing functional sort test on random list with size 30"
               <| fun _ ->
                   let a: List<int> = RandList 30
                   let b = a
@@ -66,7 +68,7 @@ module FuncListTests =
                   Expect.isTrue (IsSorted(>) subject) "Bubble sort didn't sort!"
                   Expect.equal (GetLength subject) 30 "Bubble sort changed length!"
 
-              testCase "Comparing functional qsort test"
+              testCase "Comparing functional qsort test on random list with size 30"
               <| fun _ ->
                   let a: List<int> = RandList 30
                   let b = a

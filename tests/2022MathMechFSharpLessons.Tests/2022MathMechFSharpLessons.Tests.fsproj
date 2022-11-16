@@ -14,6 +14,10 @@
         <Compile Include="Main.fs" />
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="Expecto.FsCheck" Version="9.0.4" />
+        <PackageReference Include="FsCheck" Version="2.16.5" />
+    </ItemGroup>
+    <ItemGroup>
         <ProjectReference Include="../../src/2022MathMechFSharpLessons/2022MathMechFSharpLessons.fsproj" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
