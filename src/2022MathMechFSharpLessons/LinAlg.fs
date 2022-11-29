@@ -14,172 +14,273 @@ module LinAlg =
         |> getRidOfZero 16
         |> (+) 1
 
-    // FIXME:
-    //  create another constructor, so it is not counting _getMin2Pow every iteration
-    //  check preconditions: |arr| > 0, |arr.[i]| = |arr.[j]| > 0 for each i,j
+    // TODO:
+    //  check preconditions: |arr| > 0, |arr.[i]| = |arr.[j]| > 0 for each i,j ONLY when flag debug is active
     //  add postcondion-checks in tests
     //  make sure equality is needed everywhere it is used
-    
+
     //  This is not sparse at all, I still need to add relaxation XD
 
-    type _VectorBinTree<'elementType when 'elementType: equality>(a0: _VectorBinTree<'elementType>, a1: _VectorBinTree<'elementType> option) =
+    type VectorBinTree<'elementType when 'elementType: equality>
+        (
+            size_: int,
+            _actualSize_: int,
+            a0: VectorBinTree<'elementType> option,
+            a1: VectorBinTree<'elementType> option,
+            value_: 'elementType option,
+            depth_: int
+        ) =
         struct
-            member this.size: int = 0
-            member this._actualSize: int = 0
-            member this.left: _VectorBinTree<'elementType> = a0
-            member this.right: _VectorBinTree<'elementType> option = a1
-            member this.value: 'elementType option = None
-            member this.depth: int = 0
+            member this.size: int = size_
+            member this._actualSize: int = _actualSize_
+            member this.left: VectorBinTree<'elementType> option = a0
+            member this.right: VectorBinTree<'elementType> option = a1
+            member this.value: 'elementType option = value_
+            member this.depth: int = depth_
 
-            // FIXME: add private
-            member new(arr: 'elementType list, currentSize: int) = 
-                (*member this.size: int = List.length arr
-                member this._actualSize = currentSize
+            member this.listWithTail(tail: 'elementType list) =
+                if this.left = None then
+                    []
+                else if this.right = None then
+                    this.left.Value.list
+                else
+                    this.left.Value.listWithTail (this.right.Value.list)
 
-                member this.left: _VectorBinTree<'elementType> option =
-                    if this.size > 0 then
-                        Some(_VectorBinTree (arr.[.. (this._actualSize / 2)]))
+            member this.list: 'elementType list = this.listWithTail []
+
+            new(arr: 'elementType list, _actualSize__: int option) =
+                let size__ = arr.Length
+
+                if size__ = 0 then
+                    raise
+                    <| new Exception("Can't create empty matrix")
+
+                let _actualSize__ =
+                    if _actualSize__.IsSome then
+                        _actualSize__.Value
+                    else
+                        _getMin2Pow (size__)
+
+                let a0 =
+                    if _actualSize__ > 1 then
+                        Some(new VectorBinTree<'elementType>(arr.[.. (_actualSize__ / 2)], Some(_actualSize__ / 2)))
                     else
                         None
 
-                member this.right: _VectorBinTree<'elementType> option =
-                    if this.size > 1 then
-                        Some(_VectorBinTree (arr.[(this._actualSize / 2) ..]))
+                let a1 =
+                    if _actualSize__ > 1 then
+                        Some(new VectorBinTree<'elementType>(arr.[(_actualSize__ / 2) ..], Some(_actualSize__ / 2)))
                     else
                         None
 
-                member this.value: 'elementType option =
-                    if this.size = 1 then
-                        Some(arr.[0])
-                    else
-                        None
-
-                member this.depth: int =
-                    if this.left.IsSome then
-                        this.left.Value.depth + 1
-                    else
-                        0*) 
-                new(Some(_VectorBinTree (arr.[.. (this._actualSize / 2)])), Some(_VectorBinTree (arr.[(this._actualSize / 2) ..])))
-
-            member new(arr: 'elementType list) = 
-                if arr.size < 1 then
-                    raize <| Exception("Can't create vector of 0 size")
-                member this.size: int = List.length arr
-                member this._actualSize = _getMin2Pow (this.size)
-
-                member this.left: _VectorBinTree<'elementType> option =
-                    if this.size > 0 then
-                        Some(_VectorBinTree (arr.[.. (this._actualSize / 2)]))
-                    else
-                        None
-
-                member this.right: _VectorBinTree<'elementType> option =
-                    if this.size > 1 then
-                        Some(_VectorBinTree (arr.[(this._actualSize / 2) ..]))
-                    else
-                        None
-
-                member this.value: 'elementType option =
-                    if this.size = 1 then
-                        Some(arr.[0])
-                    else
-                        None
-
-                member this.depth: int =
-                    if this.left.IsSome then
-                        this.left.Value.depth + 1
-                    else
-                        0
-
+                if size__ = 1 then
+                    new VectorBinTree<'elementType>(size__, _actualSize__, None, None, Some(arr.[0]), 1)
+                else
+                    new VectorBinTree<'elementType>(size__, _actualSize__, a0, a1, None, a0.Value.depth + 1)
         end
 
     type Vector<'elementType when 'elementType: equality>(arr: 'elementType list) =
         struct
-            member this.tree = _VectorBinTree<'elementType> (arr)
+            member this.tree: VectorBinTree<'elementType> =
+                new VectorBinTree<'elementType>(arr, None)
+
+            member this.list = this.tree.list
         end
 
-    type _MatrixQuadTree<'elementType when 'elementType: equality>(a00: _VectorBinTree<'elementType>, a01: _VectorBinTree<'elementType> option, a10: _VectorBinTree<'elementType> option, a11: _VectorBinTree<'elementType> option) =
-        struct      (arr: 'elementType list list) =
+    type MatrixQuadTree<'elementType when 'elementType: equality>
+        (
+            sizeH_: int,
+            sizeW_: int,
+            _actualSizeH_: int,
+            _actualSizeW_: int,
+            a00: MatrixQuadTree<'elementType> option,
+            a01: MatrixQuadTree<'elementType> option,
+            a10: MatrixQuadTree<'elementType> option,
+            a11: MatrixQuadTree<'elementType> option,
+            value_: 'elementType option,
+            depth_: int
+        ) =
         struct
-            member this.sizeH: int = List.length arr
-            member this.sizeW: int = List.length arr.[0]
+            member this.sizeH: int = sizeH_
+            member this.sizeW: int = sizeW_
+            member this._actualSizeH: int = _actualSizeH_
+            member this._actualSizeW: int = _actualSizeW_
+            member this.leftUp: MatrixQuadTree<'elementType> option = a00
+            member this.rightUp: MatrixQuadTree<'elementType> option = a01
+            member this.leftDown: MatrixQuadTree<'elementType> option = a10
+            member this.rightDown: MatrixQuadTree<'elementType> option = a11
+            member this.value: 'elementType option = value_
+            member this.depth: int = depth_
 
-            member this._actualSizeH: int = _getMin2Pow (this.sizeH)
-            member this._actualSizeW: int = _getMin2Pow (this.sizeW)
+            member this.list: 'elementType list list =
+                let leftPart =
+                    if this.leftUp <> None && this.leftDown <> None then
+                        (this.leftUp.Value.list)
+                        @ (this.leftDown.Value.list)
+                    elif this.leftUp <> None then
+                        (this.leftUp.Value.list)
+                    else // Note: it should be impossible for left (or top) chunk to be "None", when right (bottom) is not
+                        []
 
-            member this.leftUp: _MatrixQuadTree<'elementType> option =
-                if this.sizeH > 1 && this.sizeW > 1 then
-                    let _actualSizeW = this._actualSizeW
+                let rightPart =
+                    if this.rightUp <> None && this.rightDown <> None then
+                        (this.rightUp.Value.list)
+                        @ (this.rightDown.Value.list)
+                    elif this.rightUp <> None then
+                        (this.rightUp.Value.list)
+                    else
+                        []
 
-                    Some(
-                        _MatrixQuadTree (
-                            List.map
-                                (fun (line: 'elementType list) -> line.[.. (_actualSizeW / 2)])
-                                arr.[.. (this._actualSizeH / 2)]
+                List.map (fun (r, l) -> r @ l)
+                <| List.zip leftPart rightPart
+
+            new(arr: 'elementType list list, _actualSizeH__: int option, _actualSizeW__: int option) =
+                let sizeH = List.length arr
+
+                if sizeH = 0 then
+                    raise
+                    <| new Exception("Can't create empty matrix")
+
+                let sizeW = List.length arr.[0]
+
+                if not
+                   <| List.forall (fun a -> List.length a = sizeW) arr then
+                    raise
+                    <| new Exception("Can't create matrix of inconsistent size")
+
+                let _actualSizeH =
+                    if _actualSizeH__.IsSome then
+                        _actualSizeH__.Value
+                    else
+                        _getMin2Pow (sizeH)
+
+                let _actualSizeW =
+                    if _actualSizeW__.IsSome then
+                        _actualSizeW__.Value
+                    else
+                        _getMin2Pow (sizeW)
+
+                let leftUp: MatrixQuadTree<'elementType> option =
+                    if sizeH > 1 && sizeW > 1 then
+                        Some(
+                            new MatrixQuadTree<'elementType>(
+                                List.map
+                                    (fun (line: 'elementType list) -> line.[.. (_actualSizeW / 2 - 1)])
+                                    (arr.[.. (_actualSizeH / 2 - 1)]),
+                                None,
+                                None
+                            )
                         )
-                    )
-                else
-                    None
+                    else
+                        None
 
-            member this.rightUp: _MatrixQuadTree<'elementType> option =
-                if this.sizeH > 1 && this.sizeW > 2 then
-                    let _actualSizeW = this._actualSizeW
-
-                    Some(
-                        _MatrixQuadTree (
-                            List.map
-                                (fun (line: 'elementType list) -> line.[(_actualSizeW / 2) ..])
-                                arr.[.. (this._actualSizeH / 2)]
+                let rightUp: MatrixQuadTree<'elementType> option =
+                    if sizeH > 1 && sizeW > 1 then
+                        Some(
+                            new MatrixQuadTree<'elementType>(
+                                List.map
+                                    (fun (line: 'elementType list) -> line.[(_actualSizeW / 2) ..])
+                                    (arr.[.. (_actualSizeH / 2 - 1)]),
+                                None,
+                                None
+                            )
                         )
-                    )
-                else
-                    None
+                    else
+                        None
 
-            member this.leftDown: _MatrixQuadTree<'elementType> option =
-                if this.sizeH > 2 && this.sizeW > 1 then
-                    let _actualSizeW = this._actualSizeW
-
-                    Some(
-                        _MatrixQuadTree (
-                            List.map
-                                (fun (line: 'elementType list) -> line.[.. (_actualSizeW / 2)])
-                                arr.[(this._actualSizeH / 2) ..]
+                let leftDown: MatrixQuadTree<'elementType> option =
+                    if sizeH > 1 && sizeW > 1 then
+                        Some(
+                            new MatrixQuadTree<'elementType>(
+                                List.map
+                                    (fun (line: 'elementType list) -> line.[.. (_actualSizeW / 2 - 1)])
+                                    (arr.[(_actualSizeH / 2) ..]),
+                                None,
+                                None
+                            )
                         )
-                    )
-                else
-                    None
+                    else
+                        None
 
-            member this.rightDown: _MatrixQuadTree<'elementType> option =
-                if this.sizeH > 2 && this.sizeW > 2 then
-                    let _actualSizeW = this._actualSizeW
-
-                    Some(
-                        _MatrixQuadTree (
-                            List.map
-                                (fun (line: 'elementType list) -> line.[(_actualSizeW / 2) ..])
-                                arr.[(this._actualSizeH / 2) ..]
+                let rightDown: MatrixQuadTree<'elementType> option =
+                    if sizeH > 1 && sizeW > 1 then
+                        Some(
+                            new MatrixQuadTree<'elementType>(
+                                List.map
+                                    (fun (line: 'elementType list) -> line.[(_actualSizeW / 2) ..])
+                                    (arr.[(_actualSizeH / 2) ..]),
+                                None,
+                                None
+                            )
                         )
-                    )
-                else
-                    None
+                    else
+                        None
 
-            member this.value: 'elementType option =
-                if this.sizeH = 1 && this.sizeW = 1 then
-                    Some(arr.[0].[0])
-                else
-                    None
+                let value: 'elementType option =
+                    if sizeH = 1 && sizeW = 1 then
+                        Some(arr.[0].[0])
+                    else
+                        None
 
-            member this.depth: int =
-                if this.leftUp.IsSome then
-                    this.leftUp.Value.depth + 1
-                else
-                    0
+                let depth: int =
+                    if leftUp.IsSome then
+                        leftUp.Value.depth + 1
+                    else
+                        1
+
+                new MatrixQuadTree<'elementType>(
+                    sizeH,
+                    sizeW,
+                    _actualSizeH,
+                    _actualSizeW,
+                    leftUp,
+                    rightUp,
+                    leftDown,
+                    rightDown,
+                    value,
+                    depth
+                )
         end
 
-    type Matrix<'elementType when 'elementType: equality>(arr: 'elementType list list) =
+    type Matrix<'elementType when 'elementType: equality>(tree_: MatrixQuadTree<'elementType>) =
         struct
-            member this.tree = _MatrixQuadTree<'elementType> (arr)
+            member this.tree = tree_
+
+            member this.list = this.tree.list
+
+            new(arr: 'elementType list list) =
+                new Matrix<'elementType>(new MatrixQuadTree<'elementType>(arr, None, None))
         end
 
-    let rec transpose<'elementType when 'elementType: equality> (tensor: Matrix<'elementType>) = //(s: int) (t: int) =
-        tensor // will be easy when I impl constructor new(mat, mat option, mat option, mat option)
+    let rec transposeMatrixTree<'elementType when 'elementType: equality> (tree: MatrixQuadTree<'elementType>) = //(s: int) (t: int) =
+        new MatrixQuadTree<'elementType>(
+            tree.sizeH,
+            tree.sizeW,
+            tree._actualSizeH,
+            tree._actualSizeW,
+            (if tree.leftUp.IsSome then
+                 Some(transposeMatrixTree <| tree.leftUp.Value)
+             else
+                 None),
+
+            (if tree.leftUp.IsSome then
+                 Some(transposeMatrixTree <| tree.leftDown.Value)
+             else
+                 None),
+
+            (if tree.leftUp.IsSome then
+                 Some(transposeMatrixTree <| tree.rightUp.Value)
+             else
+                 None),
+
+            (if tree.leftUp.IsSome then
+                 Some(transposeMatrixTree <| tree.rightDown.Value)
+             else
+                 None),
+
+            tree.value,
+            tree.depth
+        )
+
+    let transpose<'elementType when 'elementType: equality> (tensor: Matrix<'elementType>) = //(s: int) (t: int) =
+        new Matrix<'elementType>(transposeMatrixTree <| tensor.tree)

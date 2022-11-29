@@ -10,9 +10,73 @@ module LinAlgTests =
     let tests =
         testList
             "samples"
-            [ testCase "Transpose test"
+            [ testCase "_getMin2Pow test"
+              <| fun _ ->
+                  let a0 = _getMin2Pow 0
+                  let a1 = _getMin2Pow 1
+                  let a2 = _getMin2Pow 2
+                  let a3 = _getMin2Pow 3
+                  let a4 = _getMin2Pow 4
+                  let a5 = _getMin2Pow 5
+                  Expect.equal a0 0 "least power of two >= 0 should be 0"
+                  Expect.equal a1 1 "least power of two >= 1 should be 1"
+                  Expect.equal a2 2 "least power of two >= 2 should be 2"
+                  Expect.equal a3 4 "least power of two >= 3 should be 4"
+                  Expect.equal a4 4 "least power of two >= 4 should be 4"
+                  Expect.equal a5 8 "least power of two >= 5 should be 8"
+              testCase "Small vectror test"
+              <| fun _ ->
+                  let a: Vector<int> = Vector([ 1; 2; 3; 4; 5; 6 ])
+                  Expect.equal a a "Check vector" // TODO: actual tests
+              testCase "Small matrix transpose test"
               <| fun _ ->
                   let a: Matrix<int> = Matrix([ [ 1; 2; 3 ]; [ 4; 5; 6 ] ])
                   let b: Matrix<int> = Matrix([ [ 1; 4 ]; [ 2; 5 ]; [ 3; 6 ] ])
                   let subject = transpose a
-                  Expect.equal subject b "mistakes were made" ]
+                  Expect.equal subject.list b.list "Operation transpose does not work on a small matrix"
+              testCase "Depth of a small matrix test"
+              <| fun _ ->
+                  let subject: Matrix<int> =
+                      Matrix(
+                          [ [ 1; 2; 3 ]
+                            [ 4; 5; 6 ]
+                            [ 7; 8; 9 ] ]
+                      )
+
+                  Expect.equal subject.tree.depth 3 "Depth of a matrix 3*3 should be 3"
+                  let subject: Matrix<int> = Matrix([ [ 1; 2; 3 ]; [ 4; 5; 6 ] ])
+
+                  Expect.equal subject.tree.depth 3
+                  <| sprintf "Depth of a matrix 2*3 should be 3 %A" subject.list
+
+                  let subject: Matrix<int> =
+                      Matrix(
+                          [ [ 1; 2; 3 ]
+                            [ 4; 5; 6 ]
+                            [ 7; 8; 9 ]
+                            [ 10; 11; 12 ] ]
+                      )
+
+                  Expect.equal subject.tree.depth 3 "Depth of a matrix 3*4 should be 3"
+              testCase "Depth of a small sparse matrix test"
+              <| fun _ ->
+                  let subject: Matrix<int> =
+                      Matrix(
+                          [ [ 1; 1; 1 ]
+                            [ 1; 1; 1 ]
+                            [ 1; 1; 1 ] ]
+                      )
+
+                  Expect.equal subject.tree.depth 3 "Depth of a sparse matrix 3*3 should be 3"
+                  let subject: Matrix<int> = Matrix([ [ 1; 1; 1 ]; [ 1; 1; 1 ] ])
+                  Expect.equal subject.tree.depth 3 "Depth of a sparse matrix 2*3 should be 3"
+
+                  let subject: Matrix<int> =
+                      Matrix(
+                          [ [ 1; 1; 1 ]
+                            [ 1; 1; 1 ]
+                            [ 1; 1; 1 ]
+                            [ 1; 1; 1 ] ]
+                      )
+
+                  Expect.equal subject.tree.depth 3 "Depth of a sparse matrix 3*4 should be 3" ]
