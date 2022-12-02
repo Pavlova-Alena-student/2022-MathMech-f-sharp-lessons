@@ -3,6 +3,16 @@ namespace MathMechFSharpLessons
 open System
 
 module LinAlg =
+    type ITensorTree<'elementType when 'elementType: equality> =
+        abstract member size: int
+        abstract member _actualSize: int
+        abstract member value: 'elementType option
+        abstract member depth: int
+
+    type ITensor<'elementType when 'elementType: equality> =
+        // abstract member list: list
+        abstract member transpose: ITensor<'elementType>
+
     let _getMin2Pow (n: int) =
         let getRidOfZero (twoPow: int) (n: int) = n ||| (n >>> twoPow)
 
@@ -39,12 +49,15 @@ module LinAlg =
             member this.depth: int = depth_
 
             member this.listWithTail(tail: 'elementType list) =
-                if this.left = None then
-                    []
-                else if this.right = None then
-                    this.left.Value.list
+                if this.value.IsSome then
+                    [ this.value.Value ] @ tail
+                elif this.left = None then
+                    tail
+                elif this.right = None then
+                    this.left.Value.listWithTail tail
                 else
-                    this.left.Value.listWithTail (this.right.Value.list)
+                    let newTail = this.right.Value.listWithTail tail // rvalue needed -_-
+                    this.left.Value.listWithTail newTail
 
             member this.list: 'elementType list = this.listWithTail []
 
@@ -53,7 +66,7 @@ module LinAlg =
 
                 if size__ = 0 then
                     raise
-                    <| new Exception("Can't create empty matrix")
+                    <| new Exception("Can't create empty vector")
 
                 let _actualSize__ =
                     if _actualSize__.IsSome then
@@ -63,28 +76,39 @@ module LinAlg =
 
                 let a0 =
                     if _actualSize__ > 1 then
-                        Some(new VectorBinTree<'elementType>(arr.[.. (_actualSize__ / 2)], Some(_actualSize__ / 2)))
+                        Some(new VectorBinTree<'elementType>(arr.[.. (_actualSize__ / 2 - 1)], Some(_actualSize__ / 2)))
                     else
                         None
 
                 let a1 =
-                    if _actualSize__ > 1 then
+                    if _actualSize__ > 1 && size__ > _actualSize__ / 2 then
                         Some(new VectorBinTree<'elementType>(arr.[(_actualSize__ / 2) ..], Some(_actualSize__ / 2)))
                     else
                         None
 
                 if size__ = 1 then
                     new VectorBinTree<'elementType>(size__, _actualSize__, None, None, Some(arr.[0]), 1)
+                elif a0.Value.value.IsSome
+                     && a1.Value.value.IsSome
+                     && a0.Value.value.Value = a1.Value.value.Value then // T_T
+                    new VectorBinTree<'elementType>(
+                        size__,
+                        _actualSize__,
+                        None,
+                        None,
+                        a0.Value.value,
+                        a0.Value.depth + 1
+                    )
                 else
                     new VectorBinTree<'elementType>(size__, _actualSize__, a0, a1, None, a0.Value.depth + 1)
         end
 
-    type Vector<'elementType when 'elementType: equality>(arr: 'elementType list) =
+    type Vector<'elementType when 'elementType: equality>(tree_: VectorBinTree<'elementType>) =
         struct
-            member this.tree: VectorBinTree<'elementType> =
-                new VectorBinTree<'elementType>(arr, None)
-
+            member this.tree: VectorBinTree<'elementType> = tree_
             member this.list = this.tree.list
+
+            new(arr: 'elementType list) = new Vector<'elementType>(new VectorBinTree<'elementType>(arr, None))
         end
 
     type MatrixQuadTree<'elementType when 'elementType: equality>
@@ -97,7 +121,7 @@ module LinAlg =
             a01: MatrixQuadTree<'elementType> option,
             a10: MatrixQuadTree<'elementType> option,
             a11: MatrixQuadTree<'elementType> option,
-            value_: 'elementType option,
+            data_: VectorBinTree<'elementType list> option,
             depth_: int
         ) =
         struct
@@ -109,30 +133,33 @@ module LinAlg =
             member this.rightUp: MatrixQuadTree<'elementType> option = a01
             member this.leftDown: MatrixQuadTree<'elementType> option = a10
             member this.rightDown: MatrixQuadTree<'elementType> option = a11
-            member this.value: 'elementType option = value_
+            member this.data: VectorBinTree<'elementType list> option = data_
             member this.depth: int = depth_
 
             member this.list: 'elementType list list =
-                let leftPart =
-                    if this.leftUp <> None && this.leftDown <> None then
-                        (this.leftUp.Value.list)
-                        @ (this.leftDown.Value.list)
-                    elif this.leftUp <> None then
-                        (this.leftUp.Value.list)
-                    else // Note: it should be impossible for left (or top) chunk to be "None", when right (bottom) is not
-                        []
+                if this.data.IsSome then
+                    this.data.Value.list
+                else
+                    let leftPart =
+                        if this.leftUp <> None && this.leftDown <> None then
+                            (this.leftUp.Value.list)
+                            @ (this.leftDown.Value.list)
+                        elif this.leftUp <> None then
+                            (this.leftUp.Value.list)
+                        else // Note: it should be impossible for left (or top) chunk to be "None", when right (bottom) is not
+                            []
 
-                let rightPart =
-                    if this.rightUp <> None && this.rightDown <> None then
-                        (this.rightUp.Value.list)
-                        @ (this.rightDown.Value.list)
-                    elif this.rightUp <> None then
-                        (this.rightUp.Value.list)
-                    else
-                        []
+                    let rightPart =
+                        if this.rightUp <> None && this.rightDown <> None then
+                            (this.rightUp.Value.list)
+                            @ (this.rightDown.Value.list)
+                        elif this.rightUp <> None then
+                            (this.rightUp.Value.list)
+                        else
+                            []
 
-                List.map (fun (r, l) -> r @ l)
-                <| List.zip leftPart rightPart
+                    List.map (fun (r, l) -> r @ l)
+                    <| List.zip leftPart rightPart
 
             new(arr: 'elementType list list, _actualSizeH__: int option, _actualSizeW__: int option) =
                 let sizeH = List.length arr
@@ -216,15 +243,17 @@ module LinAlg =
                     else
                         None
 
-                let value: 'elementType option =
-                    if sizeH = 1 && sizeW = 1 then
-                        Some(arr.[0].[0])
+                let data: VectorBinTree<'elementType list> option =
+                    if sizeH = 1 || sizeW = 1 then
+                        Some(new VectorBinTree<'elementType list>(arr, Some(_actualSizeW * _actualSizeH)))
                     else
                         None
 
                 let depth: int =
                     if leftUp.IsSome then
                         leftUp.Value.depth + 1
+                    elif data.IsSome then
+                        data.Value.depth + 1
                     else
                         1
 
@@ -237,7 +266,7 @@ module LinAlg =
                     rightUp,
                     leftDown,
                     rightDown,
-                    value,
+                    data,
                     depth
                 )
         end
@@ -254,10 +283,10 @@ module LinAlg =
 
     let rec transposeMatrixTree<'elementType when 'elementType: equality> (tree: MatrixQuadTree<'elementType>) = //(s: int) (t: int) =
         new MatrixQuadTree<'elementType>(
-            tree.sizeH,
             tree.sizeW,
-            tree._actualSizeH,
+            tree.sizeH,
             tree._actualSizeW,
+            tree._actualSizeH,
             (if tree.leftUp.IsSome then
                  Some(transposeMatrixTree <| tree.leftUp.Value)
              else
@@ -278,7 +307,7 @@ module LinAlg =
              else
                  None),
 
-            tree.value,
+            tree.data,
             tree.depth
         )
 

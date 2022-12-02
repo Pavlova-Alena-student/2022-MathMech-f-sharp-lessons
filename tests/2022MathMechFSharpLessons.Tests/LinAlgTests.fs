@@ -27,12 +27,21 @@ module LinAlgTests =
               testCase "Small vectror test"
               <| fun _ ->
                   let a: Vector<int> = Vector([ 1; 2; 3; 4; 5; 6 ])
+
                   Expect.equal a a "Check vector" // TODO: actual tests
+              testCase "Small square matrix transpose test"
+              <| fun _ ->
+                  let a: Matrix<int> = Matrix([ [ 1; 2 ]; [ 3; 4 ] ])
+                  let b: Matrix<int> = Matrix([ [ 1; 3 ]; [ 2; 4 ] ])
+                  let subject = transpose a
+
+                  Expect.equal subject.list b.list "Operation transpose does not work on a small matrix"
               testCase "Small matrix transpose test"
               <| fun _ ->
                   let a: Matrix<int> = Matrix([ [ 1; 2; 3 ]; [ 4; 5; 6 ] ])
                   let b: Matrix<int> = Matrix([ [ 1; 4 ]; [ 2; 5 ]; [ 3; 6 ] ])
                   let subject = transpose a
+
                   Expect.equal subject.list b.list "Operation transpose does not work on a small matrix"
               testCase "Depth of a small matrix test"
               <| fun _ ->
@@ -46,8 +55,7 @@ module LinAlgTests =
                   Expect.equal subject.tree.depth 3 "Depth of a matrix 3*3 should be 3"
                   let subject: Matrix<int> = Matrix([ [ 1; 2; 3 ]; [ 4; 5; 6 ] ])
 
-                  Expect.equal subject.tree.depth 3
-                  <| sprintf "Depth of a matrix 2*3 should be 3 %A" subject.list
+                  Expect.equal subject.tree.depth 3 "Depth of a matrix 2*3 should be 3"
 
                   let subject: Matrix<int> =
                       Matrix(
