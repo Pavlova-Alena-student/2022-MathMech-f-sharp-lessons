@@ -24,13 +24,11 @@ module LinAlg =
 
     type VectorBinTree<'elementType> =
         | Node of leftSubtree: VectorBinTree<'elementType> * rightSubtree: VectorBinTree<'elementType> option
-        | CompLeaf of value: 'elementType option * compression: int // compression represents amout of elements compressed. It is always power of 2
-        | DataLeaf of value: 'elementType option
+        | Leaf of value: 'elementType option * compression: int // compression represents amout of elements compressed. It is always power of 2
 
     let rec vectorToList tree =
         match tree with
-        | DataLeaf (Some (value)) -> [ value ]
-        | CompLeaf (Some (value), compr) -> List.init compr (fun _ -> value)
+        | Leaf (Some (value), compr) -> List.init compr (fun _ -> value)
         | Node (l, None) -> vectorToList l
         | Node (l, Some (r)) -> (vectorToList l) @ (vectorToList r)
         | _ -> []
@@ -56,14 +54,13 @@ module LinAlg =
                 if normSize / 2 < lst.Length then
                     listToVector (Some(normSize / 2)) lst.[(normSize / 2) ..]
                 else
-                    CompLeaf(None, normSize / 2)
+                    Leaf(None, normSize / 2)
 
             match l, r with
-            | DataLeaf v1, DataLeaf v2 when v1 = v2 -> CompLeaf(v1, 2)
-            | CompLeaf (v1, c1), CompLeaf (v2, c2) when v1 = v2 && c1 = c2 -> CompLeaf(v1, c1 * 2)
+            | Leaf (v1, c1), Leaf (v2, c2) when v1 = v2 && c1 = c2 -> Leaf(v1, c1 * 2)
             | _, _ -> Node(l, Some(r))
         else
-            DataLeaf(Some(lst.[0]))
+            Leaf(Some(lst.[0]), 1)
 
     type MatrixQuadTree<'elementType> =
         | Node of
@@ -71,22 +68,28 @@ module LinAlg =
             rightTopSubtree: MatrixQuadTree<'elementType> option *
             leftBottomSubtree: MatrixQuadTree<'elementType> option *
             rightBottomSubtree: MatrixQuadTree<'elementType> option
-        | CompLeaf of value: 'elementType option * compression: int // compression = side of a compressed square
-        | DataLeaf of value: 'elementType option
+        | Leaf of value: 'elementType option * compression: int // compression = side of a compressed square
 
     let rec matrixToList tree =
         match tree with
-        | DataLeaf (Some (value)) -> [ [ value ] ]
-        | DataLeaf (None) -> [ [] ]
-        | CompLeaf (Some (value), compr) ->
+        | Leaf (Some (value), compr) ->
             let inner = List.init compr (fun _ -> value)
             List.init compr (fun _ -> inner)
-        | CompLeaf (None, compr) -> List.init compr (fun _ -> [])
+        | Leaf (None, compr) -> []
         | Node (lt, None, None, None) -> matrixToList lt
-        | Node (lt, Some (rt), None, None) -> List.map2 (fun a b -> a @ b) (matrixToList lt) (matrixToList rt)
+        | Node (lt, Some (rt), None, None) ->
+            let rightPart = matrixToList rt
+            if rightPart = [] then
+                matrixToList lt
+            else
+                List.map2 (fun a b -> a @ b) (matrixToList lt) rightPart
         | Node (lt, None, Some (lb), None) -> (matrixToList lt) @ (matrixToList lb)
         | Node (lt, Some (rt), Some (lb), Some (rb)) ->
-            List.map2 (fun a b -> a @ b) ((matrixToList lt) @ (matrixToList lb)) ((matrixToList rt) @ (matrixToList rb))
+            let rightPart = ((matrixToList rt) @ (matrixToList rb))
+            if rightPart = [] then
+                ((matrixToList lt) @ (matrixToList lb))
+            else
+                List.map2 (fun a b -> a @ b) ((matrixToList lt) @ (matrixToList lb)) rightPart
         | _ ->
             raise
             <| new Exception("Invalid tree state for a matrix")
@@ -158,7 +161,7 @@ module LinAlg =
                             (fun (line: 'elementType list) -> line.[(normSize / 2) ..])
                             (lst.[.. (normSize / 2 - 1)])
                     else
-                        CompLeaf(None, normSize / 2)
+                        Leaf(None, normSize / 2)
 
                 let lb =
                     if normSize / 2 < lst.Length then
@@ -167,7 +170,7 @@ module LinAlg =
                             (fun (line: 'elementType list) -> line.[.. (normSize / 2 - 1)])
                             (lst.[(normSize / 2) ..])
                     else
-                        CompLeaf(None, normSize / 2)
+                        Leaf(None, normSize / 2)
 
                 let rb =
                     if (normSize / 2 < lst.Length
@@ -177,20 +180,18 @@ module LinAlg =
                             (fun (line: 'elementType list) -> line.[(normSize / 2) ..])
                             (lst.[(normSize / 2) ..])
                     else
-                        CompLeaf(None, normSize / 2)
+                        Leaf(None, normSize / 2)
 
                 match lt, rt, lb, rb with
-                | DataLeaf v1, DataLeaf v2, DataLeaf v3, DataLeaf v4 when v1 = v2 && v2 = v3 && v3 = v4 ->
-                    CompLeaf(v1, 2)
-                | CompLeaf (v1, c1), CompLeaf (v2, c2), CompLeaf (v3, c3), CompLeaf (v4, c4) when
+                | Leaf (v1, c1), Leaf (v2, c2), Leaf (v3, c3), Leaf (v4, c4) when
                     (v1 = v2 && c1 = c2)
                     && (v2 = v3 && c2 = c3)
                     && (v3 = v4 && c3 = c4)
                     ->
-                    CompLeaf(v1, c1 * 2)
+                    Leaf(v1, c1 * 2)
                 | _, _, _, _ -> Node(lt, Some(rt), Some(lb), Some(rb))
             else
-                DataLeaf(Some(lst.[0].[0]))
+                Leaf(Some(lst.[0].[0]), 1)
 
     let rec transpose<'elementType> (tree: MatrixQuadTree<'elementType>) =
         match tree with
