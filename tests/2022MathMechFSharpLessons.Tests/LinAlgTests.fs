@@ -33,17 +33,29 @@ module LinAlgTests =
               <| fun _ ->
                   let a: Matrix<int> = Matrix([ [ 1; 2 ]; [ 3; 4 ] ])
                   let b: Matrix<int> = Matrix([ [ 1; 3 ]; [ 2; 4 ] ])
-                  let subject = a.transpose
+                  let subject = a.transpose ()
 
-                  Expect.equal subject.list b.list "Operation transpose does not work on a small square matrix"
+                  Expect.equal
+                      (subject.list ())
+                      (b.list ())
+                      "Operation transpose does not work on a small square matrix"
               testCase "Small matrix transpose test"
               <| fun _ ->
                   let a: Matrix<int> = Matrix([ [ 1; 2; 3 ]; [ 4; 5; 6 ] ])
                   let b: Matrix<int> = Matrix([ [ 1; 4 ]; [ 2; 5 ]; [ 3; 6 ] ])
-                  let subject = a.transpose
-                  Expect.equal subject.list b.list "Operation transpose does not work on a small matrix (2*3 -> 3*2)"
-                  let subject = b.transpose
-                  Expect.equal subject.list a.list "Operation transpose does not work on a small matrix (3*2 -> 2*3)"
+                  let subject = a.transpose ()
+
+                  Expect.equal
+                      (subject.list ())
+                      (b.list ())
+                      "Operation transpose does not work on a small matrix (2*3 -> 3*2)"
+
+                  let subject = b.transpose ()
+
+                  Expect.equal
+                      (subject.list ())
+                      (a.list ())
+                      "Operation transpose does not work on a small matrix (3*2 -> 2*3)"
               testCase "--Depth-- of a small matrix test"
               <| fun _ ->
                   let subject1: Matrix<int> =

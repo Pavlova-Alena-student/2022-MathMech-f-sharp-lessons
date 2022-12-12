@@ -53,7 +53,7 @@ module LinAlg =
             let l = listToVector (Some(normSize / 2)) (lst.[.. (normSize / 2 - 1)])
 
             let r =
-                if normSize / 2 > lst.Length then
+                if normSize / 2 < lst.Length then
                     listToVector (Some(normSize / 2)) lst.[(normSize / 2) ..]
                 else
                     CompLeaf(None, normSize / 2)
@@ -77,14 +77,16 @@ module LinAlg =
     let rec matrixToList tree =
         match tree with
         | DataLeaf (Some (value)) -> [ [ value ] ]
+        | DataLeaf (None) -> [ [] ]
         | CompLeaf (Some (value), compr) ->
             let inner = List.init compr (fun _ -> value)
             List.init compr (fun _ -> inner)
+        | CompLeaf (None, compr) -> List.init compr (fun _ -> [])
         | Node (lt, None, None, None) -> matrixToList lt
-        | Node (lt, Some (rt), None, None) -> (matrixToList lt) @ (matrixToList rt)
-        | Node (lt, None, Some (lb), None) -> List.map2 (fun a b -> a @ b) (matrixToList lt) (matrixToList lb)
+        | Node (lt, Some (rt), None, None) -> List.map2 (fun a b -> a @ b) (matrixToList lt) (matrixToList rt)
+        | Node (lt, None, Some (lb), None) -> (matrixToList lt) @ (matrixToList lb)
         | Node (lt, Some (rt), Some (lb), Some (rb)) ->
-            List.map2 (fun a b -> a @ b) ((matrixToList lt) @ (matrixToList rt)) ((matrixToList lb) @ (matrixToList rb))
+            List.map2 (fun a b -> a @ b) ((matrixToList lt) @ (matrixToList lb)) ((matrixToList rt) @ (matrixToList rb))
         | _ ->
             raise
             <| new Exception("Invalid tree state for a matrix")
@@ -124,19 +126,19 @@ module LinAlg =
         if normSizeH > normSizeW then
             Node(
                 listToMatrix (Some(normSizeH / 2)) (Some(normSizeW)) lst.[.. (normSizeH / 2 - 1)],
-                Some(listToMatrix (Some(normSizeH / 2)) (Some(normSizeW)) lst.[(normSizeH / 2) ..]),
                 None,
+                Some(listToMatrix (Some(normSizeH / 2)) (Some(normSizeW)) lst.[(normSizeH / 2) ..]),
                 None
             )
         elif normSizeH < normSizeW then
             Node(
                 listToMatrix (Some(normSizeH)) (Some(normSizeW / 2))
                 <| List.map (fun (line: 'elementType list) -> line.[.. (normSizeW / 2 - 1)]) lst,
-                None,
                 Some(
                     listToMatrix (Some(normSizeH)) (Some(normSizeW / 2))
                     <| List.map (fun (line: 'elementType list) -> line.[(normSizeW / 2) ..]) lst
                 ),
+                None,
                 None
             )
         else // normSizeH = normSizeW
@@ -150,7 +152,7 @@ module LinAlg =
                         (lst.[.. (normSize / 2 - 1)])
 
                 let rt =
-                    if normSize / 2 > lst.[0].Length then
+                    if normSize / 2 < lst.[0].Length then
                         listToMatrix (Some(normSize / 2)) (Some(normSize / 2))
                         <| List.map
                             (fun (line: 'elementType list) -> line.[(normSize / 2) ..])
@@ -159,7 +161,7 @@ module LinAlg =
                         CompLeaf(None, normSize / 2)
 
                 let lb =
-                    if normSize / 2 > lst.Length then
+                    if normSize / 2 < lst.Length then
                         listToMatrix (Some(normSize / 2)) (Some(normSize / 2))
                         <| List.map
                             (fun (line: 'elementType list) -> line.[.. (normSize / 2 - 1)])
@@ -168,8 +170,8 @@ module LinAlg =
                         CompLeaf(None, normSize / 2)
 
                 let rb =
-                    if (normSize / 2 > lst.Length
-                        && normSize / 2 > lst.[0].Length) then
+                    if (normSize / 2 < lst.Length
+                        && normSize / 2 < lst.[0].Length) then
                         listToMatrix (Some(normSize / 2)) (Some(normSize / 2))
                         <| List.map
                             (fun (line: 'elementType list) -> line.[(normSize / 2) ..])
@@ -206,7 +208,7 @@ module LinAlg =
     type Vector<'elementType when 'elementType: equality>(tree_: VectorBinTree<'elementType>) =
         struct
             member this.tree: VectorBinTree<'elementType> = tree_
-            member this.list = vectorToList this.tree
+            member this.list() = vectorToList this.tree
 
             new(arr: 'elementType list) = new Vector<'elementType>(listToVector None arr)
         end
@@ -215,8 +217,8 @@ module LinAlg =
     type Matrix<'elementType when 'elementType: equality>(tree_: MatrixQuadTree<'elementType>) =
         struct
             member this.tree: MatrixQuadTree<'elementType> = tree_
-            member this.list = matrixToList this.tree
-            member this.transpose = Matrix(transpose this.tree)
+            member this.list() = matrixToList this.tree
+            member this.transpose() = Matrix(transpose this.tree)
 
             new(arr: 'elementType list list) = new Matrix<'elementType>(listToMatrix None None arr)
         end
