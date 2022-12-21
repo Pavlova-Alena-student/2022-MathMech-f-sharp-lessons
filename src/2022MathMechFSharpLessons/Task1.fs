@@ -1,4 +1,4 @@
-namespace _2022MathMechFSharpLessons
+namespace MathMechFSharpLessons
 
 module Task1 =
     // Causion! Fails with empty array

@@ -1,4 +1,4 @@
-namespace _2022MathMechFSharpLessons
+namespace MathMechFSharpLessons
 
 open System.Reflection
 
@@ -65,7 +65,7 @@ module Main =
     [<EntryPoint>]
     let main (argv: string array) =
         let parser =
-            ArgumentParser.Create<CLIArguments>(programName = "_2022MathMechFSharpLessons")
+            ArgumentParser.Create<CLIArguments>(programName = "MathMechFSharpLessons")
 
         let results = parser.Parse(argv)
 

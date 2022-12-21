@@ -1,4 +1,4 @@
-namespace _2022MathMechFSharpLessons.Tests
+namespace MathMechFSharpLessons.Tests
 
 module ExpectoTemplate =
 

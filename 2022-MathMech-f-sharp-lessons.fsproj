@@ -8,4 +8,8 @@
     <Compile Include="tests/MainTest.fs" />
     <Compile Include="HelloWorld.fs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Expecto.FsCheck" Version="9.0.4" />
+    <PackageReference Include="FsCheck" Version="2.16.5" />
+  </ItemGroup>
 </Project>
