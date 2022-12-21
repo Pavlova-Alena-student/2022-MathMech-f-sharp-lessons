@@ -1,7 +1,6 @@
 namespace MathMechFSharpLessons.Tests
 
 open Expecto
-open Expecto.ExpectoFsCheck
 open FsCheck
 open MathMechFSharpLessons
 
@@ -114,6 +113,20 @@ module FuncListTests =
                   let control = Cons(3, Cons(3, Cons(3, Cons(3, Cons(3, Empty)))))
                   Expect.equal subject control "Quick sort can't sort list of equal elements"
                   Expect.equal (GetLength subject) 5 "Quick sort changed length of a list!"
+
+              testProperty "Concatination test (prop)"
+              <| fun (a: List<string>, b: List<string>) ->
+                  let subject = ConCat a b
+
+                  Expect.equal
+                      (GetLength subject)
+                      ((GetLength a) + (GetLength b))
+                      "Concatination length is different than sum of original lists!"
+
+                  let subject = ConCat a Empty
+                  Expect.equal subject a "Concatination with empty list changed original list!"
+                  let subject = ConCat Empty b
+                  Expect.equal subject b "Concatination with empty list changed original list!"
 
               testProperty "Comparing functional sort test (prop)"
               <| fun (a: List<int>) ->

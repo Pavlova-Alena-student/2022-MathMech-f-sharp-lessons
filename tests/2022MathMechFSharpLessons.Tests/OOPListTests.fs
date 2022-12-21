@@ -1,6 +1,7 @@
 namespace MathMechFSharpLessons.Tests
 
 open Expecto
+open FsCheck
 open MathMechFSharpLessons
 
 module OOPListTests =
@@ -30,16 +31,30 @@ module OOPListTests =
         | :? EmptyList<'value> -> true
         | _ -> raise <| UnknownListTypeException()
 
-    (*
-    let properties =
-    testList "OOPList properties" [
-    testProperty "Sorted functional list is sorted" <| fun cmp sortF lst ->
-      IsSorted cmp (sortF cmp lst)
+    // https://fscheck.github.io/FsCheck//TestData.html
+    let treeGen<'elementType> =
+        let rec treeGen' mSize =
+            match mSize with
+            | 0 -> Gen.constant (EmptyList<'elementType>() :> IList<'elementType>)
+            | n when n > 0 ->
+                let subtree = treeGen' (n - 1)
 
-    testProperty "Sorted functional list has same size as original" <| fun cmp sortF lst ->
-      GetLength lst = GetLength (sortF cmp lst)
-    ]
-*)
+                Gen.oneof [ Gen.constant (EmptyList<'elementType>() :> IList<'elementType>)
+                            Gen.map2
+                                (fun hd tl -> NonEmptyList<'elementType>(hd, tl))
+                                Arb.generate<'elementType>
+                                subtree ]
+            | _ -> invalidArg "mSize" "Only positive arguments are allowed"
+
+        Gen.sized treeGen'
+
+    type OOPListGenerator =
+        static member IList() = Arb.fromGen treeGen
+
+    Arb.register<OOPListGenerator> () |> ignore
+
+    let config =
+        { FsCheckConfig.defaultConfig with arbitrary = [ typeof<OOPListGenerator> ] }
 
     [<Tests>]
     let tests =
@@ -95,4 +110,27 @@ module OOPListTests =
                   let sorter = QuickSort<int>() :> IListSortAlgorithm<int>
                   let subject = sorter.sort cmp a
                   Expect.isTrue (IsSorted(<) subject) "Failed to sort a OOP list (quicksort)"
-                  Expect.equal (GetLength subject) 30 "Failed to sort a OOP list: wrong length (quicksort)" ]
+                  Expect.equal (GetLength subject) 30 "Failed to sort a OOP list: wrong length (quicksort)"
+
+              testProperty "OOP concatination test (prop)"
+              <| fun (a: IList<int>, b: IList<int>) ->
+                  let subject = ConCat a b
+
+                  Expect.equal
+                      (GetLength subject)
+                      ((GetLength a) + (GetLength b))
+                      "Length of concatinated lists is invalid"
+              testProperty "OOP bubble sort test (prop)"
+              <| fun (a: IList<int>) ->
+                  let cmp = LessThan()
+                  let sorter = BubbleSort<int>() :> IListSortAlgorithm<int>
+                  let subject = sorter.sort cmp a
+                  Expect.isTrue (IsSorted(<) subject) "Failed to sort a OOP list (bubble)"
+                  Expect.equal (GetLength subject) (GetLength a) "Failed to sort a OOP list: wrong length (bubble)"
+              testProperty "OOP qsort test (prop)"
+              <| fun (a: IList<int>) ->
+                  let cmp = LessThan()
+                  let sorter = QuickSort<int>() :> IListSortAlgorithm<int>
+                  let subject = sorter.sort cmp a
+                  Expect.isTrue (IsSorted(<) subject) "Failed to sort a OOP list (bubble)"
+                  Expect.equal (GetLength subject) (GetLength a) "Failed to sort a OOP list: wrong length (bubble)" ]
