@@ -32,12 +32,12 @@ module OOPListTests =
         | _ -> raise <| UnknownListTypeException()
 
     // https://fscheck.github.io/FsCheck//TestData.html
-    let treeGen<'elementType> =
-        let rec treeGen' mSize =
+    let listGen<'elementType> : Gen<IList<'elementType>> =
+        let rec listGen' mSize =
             match mSize with
             | 0 -> Gen.constant (EmptyList<'elementType>() :> IList<'elementType>)
             | n when n > 0 ->
-                let subtree = treeGen' (n - 1)
+                let subtree = listGen' (n - 1)
 
                 Gen.oneof [ Gen.constant (EmptyList<'elementType>() :> IList<'elementType>)
                             Gen.map2
@@ -46,14 +46,15 @@ module OOPListTests =
                                 subtree ]
             | _ -> invalidArg "mSize" "Only positive arguments are allowed"
 
-        Gen.sized treeGen'
+        Gen.sized listGen'
 
     type OOPListGenerator =
-        static member IList() = Arb.fromGen treeGen
+        static member IList() = Arb.fromGen listGen
 
-    Arb.register<OOPListGenerator> () |> ignore
+        static member Register() =
+            Arb.register<OOPListGenerator> () |> ignore
 
-    let config =
+    let OOPListGenConfig =
         { FsCheckConfig.defaultConfig with arbitrary = [ typeof<OOPListGenerator> ] }
 
     [<Tests>]
@@ -112,7 +113,7 @@ module OOPListTests =
                   Expect.isTrue (IsSorted(<) subject) "Failed to sort a OOP list (quicksort)"
                   Expect.equal (GetLength subject) 30 "Failed to sort a OOP list: wrong length (quicksort)"
 
-              testProperty "OOP concatination test (prop)"
+              testPropertyWithConfig OOPListGenConfig "OOP concatination test (prop)"
               <| fun (a: IList<int>, b: IList<int>) ->
                   let subject = ConCat a b
 
@@ -120,14 +121,14 @@ module OOPListTests =
                       (GetLength subject)
                       ((GetLength a) + (GetLength b))
                       "Length of concatinated lists is invalid"
-              testProperty "OOP bubble sort test (prop)"
+              testPropertyWithConfig OOPListGenConfig "OOP bubble sort test (prop)"
               <| fun (a: IList<int>) ->
                   let cmp = LessThan()
                   let sorter = BubbleSort<int>() :> IListSortAlgorithm<int>
                   let subject = sorter.sort cmp a
                   Expect.isTrue (IsSorted(<) subject) "Failed to sort a OOP list (bubble)"
                   Expect.equal (GetLength subject) (GetLength a) "Failed to sort a OOP list: wrong length (bubble)"
-              testProperty "OOP qsort test (prop)"
+              testPropertyWithConfig OOPListGenConfig "OOP qsort test (prop)"
               <| fun (a: IList<int>) ->
                   let cmp = LessThan()
                   let sorter = QuickSort<int>() :> IListSortAlgorithm<int>
