@@ -7,6 +7,7 @@ open MathMechFSharpLessons
 module OOPListTests =
     open Task2
     open OOPList
+    open OOPListGenerator
 
     type GreaterThan() =
         interface IComparer<int> with
@@ -30,32 +31,6 @@ module OOPListTests =
             | _ -> raise <| UnknownListTypeException()
         | :? EmptyList<'value> -> true
         | _ -> raise <| UnknownListTypeException()
-
-    // https://fscheck.github.io/FsCheck//TestData.html
-    let listGen<'elementType> : Gen<IList<'elementType>> =
-        let rec listGen' mSize =
-            match mSize with
-            | 0 -> Gen.constant (EmptyList<'elementType>() :> IList<'elementType>)
-            | n when n > 0 ->
-                let subtree = listGen' (n - 1)
-
-                Gen.oneof [ Gen.constant (EmptyList<'elementType>() :> IList<'elementType>)
-                            Gen.map2
-                                (fun hd tl -> NonEmptyList<'elementType>(hd, tl))
-                                Arb.generate<'elementType>
-                                subtree ]
-            | _ -> invalidArg "mSize" "Only positive arguments are allowed"
-
-        Gen.sized listGen'
-
-    type OOPListGenerator =
-        static member IList() = Arb.fromGen listGen
-
-        static member Register() =
-            Arb.register<OOPListGenerator> () |> ignore
-
-    let OOPListGenConfig =
-        { FsCheckConfig.defaultConfig with arbitrary = [ typeof<OOPListGenerator> ] }
 
     [<Tests>]
     let tests =
@@ -133,5 +108,5 @@ module OOPListTests =
                   let cmp = LessThan()
                   let sorter = QuickSort<int>() :> IListSortAlgorithm<int>
                   let subject = sorter.sort cmp a
-                  Expect.isTrue (IsSorted(<) subject) "Failed to sort a OOP list (bubble)"
-                  Expect.equal (GetLength subject) (GetLength a) "Failed to sort a OOP list: wrong length (bubble)" ]
+                  Expect.isTrue (IsSorted(<) subject) "Failed to sort a OOP list (qsort)"
+                  Expect.equal (GetLength subject) (GetLength a) "Failed to sort a OOP list: wrong length (qsort)" ]
