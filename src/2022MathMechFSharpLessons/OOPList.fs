@@ -17,19 +17,7 @@ module OOPList =
         interface IList<'value>
 
     type UnknownListTypeException() =
-        inherit Exception("Unknown list type")
-
-    /// Generates a list. Generator should take one argument - reversed no. of current element and return an element on that place
-    let rec GenerateList (rGenerator: int -> int) (length: int) : IList<int> =
-        if length = 0 then
-            EmptyList<int>()
-        else
-            NonEmptyList<int>(rGenerator length, GenerateList rGenerator (length - 1))
-
-    /// Generates a list of random integer numbers from -500 to 499
-    let RandList (length: int) =
-        let rng = new Random()
-        GenerateList(fun _ -> rng.Next() % 1000 - 500) length
+        inherit Exception("Unknown list type (OOPList)")
 
     let rec GetLength (lst: IList<'value>) =
         match lst with
@@ -46,10 +34,10 @@ module OOPList =
             && (Compare f.Tail (s :?> NonEmptyList<'value>).Tail)
         | _ -> false
 
-    let rec ConCat<'value> (a: IList<'value>) (b: IList<'value>) =
+    let rec Concat<'value> (a: IList<'value>) (b: IList<'value>) =
         match a with
         | :? EmptyList<'value> -> b
-        | :? NonEmptyList<'value> as lst -> NonEmptyList<'value>(lst.Head, (ConCat lst.Tail b))
+        | :? NonEmptyList<'value> as lst -> NonEmptyList<'value>(lst.Head, (Concat lst.Tail b))
         | _ -> raise <| new UnknownListTypeException()
 
     // pages 193-194 from Kris Smit
@@ -78,11 +66,11 @@ module OOPList =
                 | _ -> raise <| new UnknownListTypeException()
             | _ -> raise <| new UnknownListTypeException()
 
-        let rec recursiveLoop n f a =
-            if n = 0 then
-                a
+        let rec recursiveLoop cnt func lst =
+            if cnt = 0 then
+                lst
             else
-                recursiveLoop (n - 1) f (f a)
+                recursiveLoop (cnt - 1) func (func lst)
 
         interface IListSortAlgorithm<'value> with
             member this.sort (cmp: IComparer<'value>) (lst: IList<'value>) =
@@ -116,10 +104,10 @@ module OOPList =
                     if (f :? EmptyList<'value>) then
                         NonEmptyList<'value>(pivot, qsort cmp s)
                     elif (s :? EmptyList<'value>) then
-                        ConCat(qsort cmp f)
+                        Concat(qsort cmp f)
                         <| NonEmptyList<'value>(pivot, EmptyList())
                     else
-                        ConCat(qsort cmp f) (NonEmptyList<'value>(pivot, qsort cmp s))
+                        Concat(qsort cmp f) (NonEmptyList<'value>(pivot, qsort cmp s))
                 | _ -> raise <| UnknownListTypeException()
             | :? EmptyList<'value> -> EmptyList<'value>()
             | _ -> raise <| UnknownListTypeException()

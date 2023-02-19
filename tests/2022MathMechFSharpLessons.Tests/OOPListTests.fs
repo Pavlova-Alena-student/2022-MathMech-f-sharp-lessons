@@ -22,10 +22,10 @@ module OOPListTests =
         | :? NonEmptyList<'value> as lst ->
             match (lst.Tail) with
             | :? NonEmptyList<'value> as tl ->
-                let a0 = lst.Head
-                let a1 = tl.Head
+                let head1 = lst.Head
+                let head2 = tl.Head
 
-                ((cmp a0 a1) || (not <| cmp a1 a0))
+                ((cmp head1 head2) || (not <| cmp head2 head1))
                 && (IsSorted cmp tl)
             | :? EmptyList<'value> -> true
             | _ -> raise <| UnknownListTypeException()
@@ -45,7 +45,7 @@ module OOPListTests =
               <| fun _ ->
                   let a = NonEmptyList(4, NonEmptyList(3, NonEmptyList(9, EmptyList<int>())))
                   let b = NonEmptyList(4, NonEmptyList(3, NonEmptyList(9, EmptyList<int>())))
-                  let subject: IList<int> = ConCat a b
+                  let subject: IList<int> = Concat a b
 
                   Expect.isTrue
                       (Compare
@@ -58,39 +58,10 @@ module OOPListTests =
                               )
                           )))
                       "Failed to concat two small OOP lists"
-              testCase "OOP concatination test"
-              <| fun _ ->
-                  let a = GenerateList(fun _ -> 4) 4
-                  let b = GenerateList(fun _ -> 3) 5
-                  let subject1: IList<int> = ConCat a b
-                  let subject2: IList<int> = ConCat b a
-
-                  Expect.equal (GetLength subject1) 9 "Length of concatinated lists is invalid"
-                  Expect.equal (GetLength subject2) 9 "Length of concatinated lists is invalid"
-
-                  Expect.isFalse (Compare subject1 subject2) "Failed to concat: 3 <> 4"
-                  Expect.equal (subject1 :?> NonEmptyList<int>).Head 4 "Failed to concat: wrong head"
-                  Expect.equal (subject2 :?> NonEmptyList<int>).Head 3 "Failed to concat: wrong head"
-              testCase "OOP bubble sort test"
-              <| fun _ ->
-                  let a = RandList 30
-                  let cmp = GreaterThan()
-                  let sorter = BubbleSort<int>() :> IListSortAlgorithm<int>
-                  let subject = sorter.sort cmp a
-                  Expect.isTrue (IsSorted(>) subject) "Failed to sort a OOP list (bubble)"
-                  Expect.equal (GetLength subject) 30 "Failed to sort a OOP list: wrong length (bubble)"
-              testCase "OOP qsort test"
-              <| fun _ ->
-                  let a = RandList 30
-                  let cmp = LessThan()
-                  let sorter = QuickSort<int>() :> IListSortAlgorithm<int>
-                  let subject = sorter.sort cmp a
-                  Expect.isTrue (IsSorted(<) subject) "Failed to sort a OOP list (quicksort)"
-                  Expect.equal (GetLength subject) 30 "Failed to sort a OOP list: wrong length (quicksort)"
 
               testPropertyWithConfig OOPListGenConfig "OOP concatination test (prop)"
               <| fun (a: IList<int>, b: IList<int>) ->
-                  let subject = ConCat a b
+                  let subject = Concat a b
 
                   Expect.equal
                       (GetLength subject)

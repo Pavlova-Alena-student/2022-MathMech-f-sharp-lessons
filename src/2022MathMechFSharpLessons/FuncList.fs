@@ -8,80 +8,68 @@ module FuncList =
         | Cons of head: 'value * tail: List<'value>
         | Empty
 
-    /// Generates a list. Generator should take one argument - reversed no. of current element and return an element on that place
-    let rec GenerateList rGenerator length =
-        if length = 0 then
-            Empty
-        else
-            Cons(rGenerator length, GenerateList rGenerator (length - 1))
-
-    /// Generates a list of random integer numbers from -500 to 499
-    let RandList length =
-        let rng = new Random()
-        GenerateList(fun _ -> rng.Next() % 1000 - 500) length
-
     // For testing: insersion sort
     // expects cmp to be asymmetric
-    let rec InsertionSort cmp a =
-        match a with
+    let rec InsertionSort cmp lst =
+        match lst with
         | Empty -> Empty
-        | Cons (a0, Empty) -> a
-        | Cons (a0, axs) ->
-            match (InsertionSort cmp axs) with
-            | Cons (a1, axs) when not <| cmp a0 a1 -> Cons(a1, InsertionSort cmp (Cons(a0, axs)))
-            | a -> Cons(a0, a)
+        | Cons (hd, Empty) -> lst
+        | Cons (hd, tl) ->
+            match (InsertionSort cmp tl) with
+            | Cons (hd2, tl2) when not <| cmp hd hd2 -> Cons(hd2, InsertionSort cmp (Cons(hd, tl2)))
+            | lst2 -> Cons(hd, lst2)
 
-    let rec ConCat a b =
-        match a with
-        | Empty -> b
-        | Cons (hd, tl) -> Cons(hd, ConCat tl b)
+    let rec Concat lst1 lst2 =
+        match lst1 with
+        | Empty -> lst2
+        | Cons (hd, tl) -> Cons(hd, Concat tl lst2)
 
-    let rec GetLength a =
-        match a with
+    let rec GetLength lst =
+        match lst with
         | Empty -> 0
-        | Cons (_, a) -> 1 + GetLength a
+        | Cons (_, rest) -> 1 + GetLength rest
 
     // expects cmp to be asymmetric
-    let BubbleSort cmp a =
-        let rec RaiseBubble cmp a =
-            match a with
+    let BubbleSort cmp lst =
+        let rec RaiseBubble cmp lst =
+            match lst with
             | Empty -> Empty
-            | Cons (a0, Empty) -> a
-            | Cons (a0, Cons (a1, axs)) when not <| cmp a0 a1 -> Cons(a1, RaiseBubble cmp (Cons(a0, axs)))
-            | Cons (a0, Cons (a1, axs)) -> Cons(a0, RaiseBubble cmp (Cons(a1, axs)))
+            | Cons (_, Empty) -> lst
+            | Cons (hd, Cons (hd2, tl)) when not <| cmp hd hd2 -> Cons(hd2, RaiseBubble cmp (Cons(hd, tl)))
+            | Cons (hd, Cons (hd2, tl)) -> Cons(hd, RaiseBubble cmp (Cons(hd2, tl)))
 
-        let len = GetLength a
+        let len = GetLength lst
 
-        let rec recursiveLoop n f a =
-            if n = 0 then
-                a
+        let rec recursiveLoop cnt func lst =
+            if cnt = 0 then
+                lst
             else
-                recursiveLoop (n - 1) f (f a)
+                recursiveLoop (cnt - 1) func (func lst)
 
-        recursiveLoop len (RaiseBubble cmp) a
+        recursiveLoop len (RaiseBubble cmp) lst
 
     // expects cmp to be asymmetric
-    let QuickSort cmp a =
-        let rec partition cmp pivot a =
-            match a with
-            | Cons (a0, axs) when not <| cmp pivot a0 ->
-                let f, s = partition cmp pivot axs
-                Cons(a0, f), s
-            | Cons (a0, axs) ->
-                let f, s = partition cmp pivot axs
-                f, Cons(a0, s)
+    let QuickSort cmp lst =
+        let rec partition cmp pivot lst =
+            match lst with
+            | Cons (hd, tl) when not <| cmp pivot hd ->
+                let f, s = partition cmp pivot tl
+                Cons(hd, f), s
+            | Cons (hd, tl) ->
+                let f, s = partition cmp pivot tl
+                f, Cons(hd, s)
             | _ -> Empty, Empty
 
-        let rec qsort cmp a =
-            match a with
-            | Cons (a0, Empty) -> a
-            | Cons (a0, axs) ->
-                let firstHalf, secondHalf = partition cmp a0 axs
+        let rec qsort cmp lst =
+            match lst with
+            | Cons (hd, Empty) -> lst
+            | Cons (hd, tl) ->
+                let firstHalf, secondHalf = partition cmp hd tl
 
                 match firstHalf, secondHalf with
-                | Empty, nonempty -> Cons(a0, (qsort cmp nonempty))
-                | nonempty, Empty -> ConCat(qsort cmp nonempty) (Cons(a0, Empty))
-                | _ -> ConCat(qsort cmp firstHalf) (Cons(a0, (qsort cmp secondHalf)))
+                | Empty, nonempty -> Cons(hd, (qsort cmp nonempty))
+                | nonempty, Empty -> Concat(qsort cmp nonempty) (Cons(hd, Empty))
+                | _ -> Concat(qsort cmp firstHalf) (Cons(hd, (qsort cmp secondHalf)))
             | _ -> Empty
 
-        qsort cmp a
+        qsort cmp lst
