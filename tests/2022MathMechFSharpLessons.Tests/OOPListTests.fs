@@ -35,13 +35,13 @@ module OOPListTests =
     [<Tests>]
     let tests =
         testList
-            "OOP sample tests"
-            [ testCase "OOP length test"
+            "OOPList tests"
+            [ testCase "Length test for OOPList"
               <| fun _ ->
                   let a = NonEmptyList(4, NonEmptyList(3, NonEmptyList(9, EmptyList<int>())))
                   let subject = GetLength a
                   Expect.equal subject 3 "Failed to get length of a OOP list"
-              testCase "OOP small concatination test"
+              testCase "Small concatination test for OOPList"
               <| fun _ ->
                   let a = NonEmptyList(4, NonEmptyList(3, NonEmptyList(9, EmptyList<int>())))
                   let b = NonEmptyList(4, NonEmptyList(3, NonEmptyList(9, EmptyList<int>())))
@@ -59,7 +59,7 @@ module OOPListTests =
                           )))
                       "Failed to concat two small OOP lists"
 
-              testPropertyWithConfig OOPListGenConfig "OOP concatination test (prop)"
+              testPropertyWithConfig OOPListGenConfig "Concatination test for OOPList (property)"
               <| fun (a: IList<int>, b: IList<int>) ->
                   let subject = Concat a b
 
@@ -67,14 +67,14 @@ module OOPListTests =
                       (GetLength subject)
                       ((GetLength a) + (GetLength b))
                       "Length of concatinated lists is invalid"
-              testPropertyWithConfig OOPListGenConfig "OOP bubble sort test (prop)"
+              testPropertyWithConfig OOPListGenConfig "Bubble sort test for OOPList (property)"
               <| fun (a: IList<int>) ->
                   let cmp = LessThan()
                   let sorter = BubbleSort<int>() :> IListSortAlgorithm<int>
                   let subject = sorter.sort cmp a
                   Expect.isTrue (IsSorted(<) subject) "Failed to sort a OOP list (bubble)"
                   Expect.equal (GetLength subject) (GetLength a) "Failed to sort a OOP list: wrong length (bubble)"
-              testPropertyWithConfig OOPListGenConfig "OOP qsort test (prop)"
+              testPropertyWithConfig OOPListGenConfig "Qsort test for OOPList (property)"
               <| fun (a: IList<int>) ->
                   let cmp = LessThan()
                   let sorter = QuickSort<int>() :> IListSortAlgorithm<int>
