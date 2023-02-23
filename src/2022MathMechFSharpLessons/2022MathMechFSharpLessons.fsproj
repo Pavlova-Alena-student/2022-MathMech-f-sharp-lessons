@@ -17,6 +17,9 @@
         <Compile Include="AssemblyInfo.fs" />
         <None Include="App.config" />
         <Compile Include="Task1.fs" />
+        <Compile Include="FuncList.fs" />
+        <Compile Include="OOPList.fs" />
+        <Compile Include="Task2.fs" />
         <Compile Include="Main.fs" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />

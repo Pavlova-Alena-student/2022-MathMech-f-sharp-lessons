@@ -8,7 +8,15 @@
     <ItemGroup>
         <Compile Include="AssemblyInfo.fs" />
         <Compile Include="Task1Tests.fs" />
+        <Compile Include="FuncListTests.fs" />
+        <Compile Include="OOPListGenerator.fs" />
+        <Compile Include="OOPListTests.fs" />
+        <Compile Include="Task2Tests.fs" />
         <Compile Include="Main.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Expecto.FsCheck" Version="9.0.4" />
+        <PackageReference Include="FsCheck" Version="2.16.5" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="../../src/2022MathMechFSharpLessons/2022MathMechFSharpLessons.fsproj" />
