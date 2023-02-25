@@ -8,6 +8,24 @@ module FuncList =
         | Cons of head: 'value * tail: List<'value>
         | Empty
 
+    // Trying to concat 2 unsorted lists = UB
+    let rec FuseSorted cmp l1 l2 =
+        match l1 with
+        | Empty -> l2
+        | Cons (hd1, tl1) ->
+            match l2 with
+            | Empty -> l1
+            | Cons (hd2, tl2) when cmp hd1 hd2 -> Cons(hd1, FuseSorted cmp tl1 l2)
+            | Cons (hd2, tl2) -> Cons(hd2, FuseSorted cmp l1 tl2)
+
+    // Trying to detete from unsorted list = UB
+    let rec DeleteEqual sortedList =
+        match sortedList with
+        | Empty -> sortedList
+        | Cons (_, Empty) -> sortedList
+        | Cons (hd1, Cons (hd2, tl)) when hd1 = hd2 -> DeleteEqual(Cons(hd1, tl))
+        | Cons (hd, tl) -> Cons(hd, DeleteEqual tl)
+
     // For testing: insersion sort
     // expects cmp to be asymmetric
     let rec InsertionSort cmp lst =
