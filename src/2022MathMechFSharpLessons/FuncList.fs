@@ -82,14 +82,14 @@ module FuncList =
 module SortedFuncList =
     open FuncList
 
-    let rec FuseSorted cmp l1 l2 =
-        match l1 with
-        | Empty -> l2
+    let rec FuseSorted cmp sorted1 sorted2 =
+        match sorted1 with
+        | Empty -> sorted2
         | Cons (hd1, tl1) ->
-            match l2 with
-            | Empty -> l1
-            | Cons (hd2, tl2) when cmp hd1 hd2 -> Cons(hd1, FuseSorted cmp tl1 l2)
-            | Cons (hd2, tl2) -> Cons(hd2, FuseSorted cmp l1 tl2)
+            match sorted2 with
+            | Empty -> sorted1
+            | Cons (hd2, tl2) when cmp hd1 hd2 -> Cons(hd1, FuseSorted cmp tl1 sorted2)
+            | Cons (hd2, tl2) -> Cons(hd2, FuseSorted cmp sorted1 tl2)
 
     let rec DeleteEqual sortedList =
         match sortedList with
@@ -97,9 +97,3 @@ module SortedFuncList =
         | Cons (_, Empty) -> sortedList
         | Cons (hd1, Cons (hd2, tl)) when hd1 = hd2 -> DeleteEqual(Cons(hd1, tl))
         | Cons (hd, tl) -> Cons(hd, DeleteEqual tl)
-
-    let rec Insert cmp sortedList element =
-        match sortedList with
-        | Empty -> Cons(element, Empty)
-        | Cons (hd, _) when cmp element hd -> Cons(element, sortedList)
-        | Cons (hd, tl) -> Cons(hd, Insert cmp tl element)

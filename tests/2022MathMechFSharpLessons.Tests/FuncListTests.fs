@@ -142,4 +142,72 @@ module FuncListTests =
                         // should be something like `let b = copy a`
                         let control = InsertionSort(<) a
                         let subject = QuickSort(<) a
-                        Expect.equal subject control "Sorting functional list with insertion <> with qsort" ] ]
+                        Expect.equal subject control "Sorting functional list with insertion <> with qsort" ]
+
+              testList
+                  "Fold tests for FuncList"
+                  [ testCase "Empty list fold test"
+                    <| fun _ ->
+                        let a: List<int> = Empty
+                        let subject = Fold(fun acc v -> Cons(v, acc)) Empty a
+                        Expect.equal subject Empty "Folding empty list failed: not empty"
+                        let subject = Fold(fun acc v -> v + acc) 0 a
+                        Expect.equal subject 0 "Folding empty list failed: sum is not 0" ]
+
+              testList
+                  "SortedList module tests"
+                  [ testCase "Fusion small test"
+                    <| fun _ ->
+                        let a = Cons(0, Cons(2, Cons(4, Cons(6, Empty))))
+                        let b = Cons(0, Cons(3, Cons(6, Empty)))
+                        let subject = SortedFuncList.FuseSorted(<) a b
+
+                        Expect.equal
+                            (GetLength subject)
+                            (GetLength a + GetLength b)
+                            "Small fusion failed: length is different"
+
+                        Expect.equal
+                            subject
+                            (Cons(0, Cons(0, Cons(2, Cons(3, Cons(4, Cons(6, Cons(6, Empty))))))))
+                            "Small fusion failed!"
+
+                    testCase "Deletion of equal small test"
+                    <| fun _ ->
+                        let a = Cons(0, Cons(0, Cons(0, Empty)))
+                        let subject = SortedFuncList.DeleteEqual a
+                        Expect.equal subject (Cons(0, Empty)) "Couldn't delete equal elements in small list"
+
+                    testProperty "Fusion test (prop)"
+                    <| fun (a: List<int>, b: List<int>) ->
+                        let srtd1 = QuickSort(<) a
+                        let srtd2 = QuickSort(<) b
+                        let subject = SortedFuncList.FuseSorted(<) srtd1 srtd2
+
+                        Expect.equal
+                            (GetLength subject)
+                            (GetLength a + GetLength b)
+                            "Fusion failed: length is different"
+
+                        Expect.isTrue (IsSorted(<) subject) "Fusion of sorted lists returned unsorted!"
+
+                    testProperty "Deletion of equal test (prop)"
+                    <| fun (a: List<int>) ->
+                        let srtd = QuickSort(<) a
+                        let subject = SortedFuncList.DeleteEqual srtd
+
+                        Expect.isTrue
+                            (match subject, srtd with
+                             | Empty, Empty -> true
+                             | Cons (v1, _), Cons (v2, _) when v1 = v2 -> true
+                             | _ -> false)
+                            "First element of list disapperared after deleting equal elements!"
+
+                        Expect.isLessThanOrEqual
+                            (GetLength subject)
+                            (GetLength a)
+                            "Amount of elements increased after deleting some"
+
+                        Expect.isTrue
+                            (IsSorted(<) subject)
+                            "Deletion of some elements in sorted list made this list unsorted!" ] ]

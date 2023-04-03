@@ -27,7 +27,6 @@
 1. Собрать проект: `./build.sh DotnetBuild`
 2. По желанию, можно протестировать: `./build.sh DotnetTest`
 3. Запустить: `./src/2022MathMechFSharpLessons/bin/Debug/net6.0/2022MathMechFSharpLessons`
-Этот исполняемый файл выполняет функции из task1, а функции из task2 - нет
 Этот исполняемый файл выполняет функции из task1, а функции из других заданий - нет
 
 ## Builds
