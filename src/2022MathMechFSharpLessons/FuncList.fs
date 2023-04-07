@@ -73,3 +73,27 @@ module FuncList =
             | _ -> Empty
 
         qsort cmp lst
+
+    let rec Fold func acc lst =
+        match lst with
+        | Cons (hd, tl) -> Fold func (func acc hd) tl
+        | Empty -> acc
+
+module SortedFuncList =
+    open FuncList
+
+    let rec FuseSorted cmp sorted1 sorted2 =
+        match sorted1 with
+        | Empty -> sorted2
+        | Cons (hd1, tl1) ->
+            match sorted2 with
+            | Empty -> sorted1
+            | Cons (hd2, tl2) when cmp hd1 hd2 -> Cons(hd1, FuseSorted cmp tl1 sorted2)
+            | Cons (hd2, tl2) -> Cons(hd2, FuseSorted cmp sorted1 tl2)
+
+    let rec DeleteEqual sortedList =
+        match sortedList with
+        | Empty -> sortedList
+        | Cons (_, Empty) -> sortedList
+        | Cons (hd1, Cons (hd2, tl)) when hd1 = hd2 -> DeleteEqual(Cons(hd1, tl))
+        | Cons (hd, tl) -> Cons(hd, DeleteEqual tl)
