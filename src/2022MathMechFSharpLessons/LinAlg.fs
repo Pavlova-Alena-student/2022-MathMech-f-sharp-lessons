@@ -201,7 +201,7 @@ module LinAlg =
                         MLeaf(None, normSize / 2)
 
                 relaxMatrix lt rt lb rb
-            else if lst.Length = 0 || lst.[0].Length = 0 then
+            elif lst.Length = 0 || lst.[0].Length = 0 then
                 MLeaf(None, 0)
             else
                 MLeaf(Some(lst.[0].[0]), 1)

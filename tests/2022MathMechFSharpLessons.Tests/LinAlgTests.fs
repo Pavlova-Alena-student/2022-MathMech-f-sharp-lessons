@@ -5,8 +5,6 @@ open MathMechFSharpLessons
 
 module LinAlgTests =
     open LinAlg
-    //open Printf
-    //open System.IO
 
     [<Tests>]
     let tests =
@@ -135,15 +133,13 @@ module LinAlgTests =
                     <| fun (intVec: Vector<int>) ->
                         let n = intVec.length
 
-                        if n <> 0 then
+                        if n <> 0 then // skip if vector has 0 length
                             let ZArray = List.replicate n <| List.replicate n 0
                             let ZMat: Matrix<int> = Matrix(ZArray)
 
                             let EArray =
                                 ZArray
-                                |> List.mapi (fun i arr_i ->
-                                    arr_i.[i] = 1 |> ignore
-                                    arr_i)
+                                |> List.mapi (fun i arr_i -> List.updateAt i 1 arr_i)
 
                             let EMat: Matrix<int> = Matrix(EArray)
 
@@ -151,10 +147,6 @@ module LinAlgTests =
                                 ((intVec.mult (+) (*) ZMat).list ())
                                 0
                                 "Standart multiplication of a vector(int) to zero matrix failed"
-
-                            //let file = File.CreateText("out.txt")
-                            //List.iter (fprintf file "%d") (intVec.list ())
-                            //file.Close()
 
                             Expect.equal
                                 (intVec.mult (+) (*) EMat)
