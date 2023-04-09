@@ -20,7 +20,7 @@ module LinAlg =
 
     type internal VectorBinTree<'elementType> =
         | VNode of leftSubtree: VectorBinTree<'elementType> * rightSubtree: VectorBinTree<'elementType>
-        | VLeaf of value: 'elementType option * compression: int // compression represents amout of elements compressed. It is always power of 2
+        | VLeaf of value: 'elementType option * compression: int // compression represents amount of elements compressed. It is always power of 2
 
     let rec private vectorToList tree =
         match tree with
@@ -62,7 +62,6 @@ module LinAlg =
             if normSize.IsSome then
                 normSize.Value
             else
-                assert (lst.Length > 0)
                 _getMin2Pow <| lst.Length
 
         if normSize > 1 then
@@ -75,6 +74,8 @@ module LinAlg =
                     VLeaf(None, normSize / 2)
 
             relaxVector l r
+        else if lst.Length = 0 then
+            VLeaf(None, 0)
         else
             VLeaf(Some(lst.[0]), 1)
 
@@ -124,15 +125,19 @@ module LinAlg =
             if normSizeH.IsSome then
                 normSizeH.Value
             else
-                assert (lst.Length > 0)
+                // assert (lst.Length > 0)
                 _getMin2Pow <| lst.Length
 
         let normSizeW =
             if normSizeW.IsSome then
                 normSizeW.Value
             else
-                let lenW = lst.[0].Length
-                assert (lenW > 0)
+                let lenW =
+                    if lst.Length = 0 then
+                        0
+                    else
+                        lst.[0].Length
+                //assert (lenW > 0)
 
                 if not
                    <| List.forall (fun line -> List.length line = lenW) lst then
@@ -196,54 +201,48 @@ module LinAlg =
                         MLeaf(None, normSize / 2)
 
                 relaxMatrix lt rt lb rb
+            else if lst.Length = 0 || lst.[0].Length = 0 then
+                MLeaf(None, 0)
             else
                 MLeaf(Some(lst.[0].[0]), 1)
 
-    let rec private transpose<'elementType> (tree: MatrixQuadTree<'elementType>) =
-        match tree with
-        | MNode (a00, a01, a10, a11) -> MNode(transpose a00, transpose a10, transpose a01, transpose a11)
-        | _ -> tree
-
-    let rec private multMatVec<'matType, 'vecType, 'resType when 'resType: equality>
+    let rec private multVecMat<'vecType, 'matType, 'resType when 'resType: equality>
         (fAdd: 'resType option -> 'resType option -> 'resType option)
-        (fMult: 'matType option -> 'vecType option -> int -> 'resType option)
-        (mat: MatrixQuadTree<'matType>)
+        (fMult: 'vecType option -> 'matType option -> int -> 'resType option)
         (vec: VectorBinTree<'vecType>)
+        (mat: MatrixQuadTree<'matType>)
         : VectorBinTree<'resType> =
-        match mat, vec with
-        | MLeaf (matVal, c1), VLeaf (vecVal, c2) when c1 = c2 -> VLeaf(fMult matVal vecVal (int c1), c1)
-        | MNode (a00, a01, a10, a11), VNode (v0, v1) ->
-            let a00v0 = multMatVec fAdd fMult a00 v0
-            let a01v1 = multMatVec fAdd fMult a01 v1
+        match vec, mat with
+        | VLeaf (vecVal, c1), MLeaf (matVal, c2) when c1 = c2 -> VLeaf(fMult vecVal matVal (int c1), c1)
+        | VNode (v0, v1), MNode (a00, a01, a10, a11) ->
+            let v0a00 = multVecMat fAdd fMult v0 a00
+            let v1a10 = multVecMat fAdd fMult v1 a10
 
             let l =
-                match a01v1 with
-                | VLeaf (None, _) -> a00v0
-                | _ -> vectorMap2 fAdd a00v0 a01v1
+                match v1a10 with
+                | VLeaf (None, _) -> v0a00
+                | _ -> vectorMap2 fAdd v0a00 v1a10
 
-            let a10v0 = multMatVec fAdd fMult a10 v0
-            let a11v1 = multMatVec fAdd fMult a11 v1
+            let v0a01 = multVecMat fAdd fMult v0 a01
+            let v1a11 = multVecMat fAdd fMult v1 a11
 
             let r =
-                match a11v1 with
-                | VLeaf (None, _) -> a10v0
-                | _ -> vectorMap2 fAdd a10v0 a11v1
+                match v1a11 with
+                | VLeaf (None, _) -> v0a01
+                | _ -> vectorMap2 fAdd v0a01 v1a11
 
             relaxVector l r
-        | MLeaf (matVal, c1), VNode (v0, v1) ->
-            let a00v0 = multMatVec fAdd fMult (MLeaf(matVal, c1 / 2)) v0
-            let a01v1 = multMatVec fAdd fMult (MLeaf(matVal, c1 / 2)) v1
-            let a10v0 = a00v0
-            let a11v1 = a01v1
-            relaxVector (vectorMap2 fAdd a00v0 a01v1) (vectorMap2 fAdd a10v0 a11v1)
-        | MNode (a00, a01, a10, a11), VLeaf (vecVal, c2) ->
-            multMatVec fAdd fMult mat (VNode((VLeaf(vecVal, c2 / 2)), (VLeaf(vecVal, c2 / 2))))
+        | VNode (v0, v1), MLeaf (matVal, c2) ->
+            let v0a00 = multVecMat fAdd fMult v0 (MLeaf(matVal, c2 / 2))
+            let v1a10 = multVecMat fAdd fMult v1 (MLeaf(matVal, c2 / 2))
+            let v0a01 = v0a00
+            let v1a11 = v1a10
+            relaxVector (vectorMap2 fAdd v0a00 v1a10) (vectorMap2 fAdd v0a01 v1a11)
+        | VLeaf (vecVal, c1), MNode (a00, a01, a10, a11) ->
+            multVecMat fAdd fMult (VNode((VLeaf(vecVal, c1 / 2)), (VLeaf(vecVal, c1 / 2)))) mat
         | _ ->
             raise
             <| TensorMultiplicationException("Failed to multiply matrix on vector")
-
-    let private multVecMat fAdd fMult vec mat = // TODO: fix the order of operations
-        multMatVec (Utils.flip fAdd) (Utils.flip fMult) (transpose mat) vec
 
     let private advancedAdd fAdd a b =
         match a, b with
@@ -260,6 +259,31 @@ module LinAlg =
         match a, b with
         | Some (a), Some (b) -> Some(multiply (fMult a b) cnst2pow)
         | _ -> None
+
+    // wrapper over MatrixQuadTree
+    type Matrix<'elementType when 'elementType: equality>
+        private
+        (
+            tree_: MatrixQuadTree<'elementType>,
+            tupleHW: int * int
+        ) =
+        struct
+            member internal this.tree: MatrixQuadTree<'elementType> = tree_
+            member this.height: int = fst tupleHW
+            member this.width: int = snd tupleHW
+            member this.list() = matrixToList this.tree
+
+            new(arr: 'elementType list list) =
+                new Matrix<'elementType>(
+                    listToMatrix None None arr,
+                    (arr.Length,
+                     if arr.Length = 0 then
+                         raise
+                         <| TensorConversionFromListException("Can't create matrix of zero size")
+                     else
+                         arr.[0].Length)
+                )
+        end
 
     // wrapper over VectorBinTree
     type Vector<'elementType when 'elementType: equality> internal (tree_: VectorBinTree<'elementType>, len: int) =
@@ -283,46 +307,4 @@ module LinAlg =
                 )
 
             new(arr: 'elementType list) = new Vector<'elementType>(listToVector None arr, arr.Length)
-        end
-
-    // wrapper over MatrixQuadTree
-    and Matrix<'elementType when 'elementType: equality>
-        private
-        (
-            tree_: MatrixQuadTree<'elementType>,
-            tupleHW: int * int
-        ) =
-        struct
-            member internal this.tree: MatrixQuadTree<'elementType> = tree_
-            member this.height: int = fst tupleHW
-            member this.width: int = snd tupleHW
-            member this.list() = matrixToList this.tree
-
-            member this.mult
-                (fAdd: 'resType -> 'resType -> 'resType)
-                (fMult: 'elementType -> 'otherType -> 'resType)
-                (other: Vector<'otherType>)
-                : Vector<'resType> =
-                if this.width <> other.length then
-                    raise
-                    <| TensorMultiplicationException("Can't multiply matrix to vector: sizes don't match")
-
-                Vector<'resType>(
-                    multMatVec (advancedAdd fAdd) (advancedMult fAdd fMult) this.tree other.tree,
-                    this.height
-                )
-
-            member this.transpose() =
-                Matrix(transpose this.tree, (this.width, this.height))
-
-            new(arr: 'elementType list list) =
-                new Matrix<'elementType>(
-                    listToMatrix None None arr,
-                    (arr.Length,
-                     if arr.Length = 0 then
-                         raise
-                         <| TensorConversionFromListException("Can't create matrix of zero size")
-                     else
-                         arr.[0].Length)
-                )
         end
