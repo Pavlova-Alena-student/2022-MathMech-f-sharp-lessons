@@ -27,90 +27,27 @@ module LinAlgTests =
                   "Matrix tests"
                   [ testCase "Small matrix test"
                     <| fun _ ->
-                        let lst1 =
-                            [ [ 1; 2; 3 ]
-                              [ 4; 5; 6 ]
-                              [ 7; 8; 9 ] ]
+                        let lst = [ [ 1; 2; 3 ]; [ 4; 5; 6 ] ]
+                        let subject: Matrix<int> = Matrix(lst)
 
-                        let subject1: Matrix<int> = Matrix(lst1)
+                        Expect.equal subject.height 2 "Length (height) of a matrix is not the same as the original list"
 
-                        Expect.equal
-                            subject1.height
-                            3
-                            "Length (height) of a matrix is not the same as the original list"
-
-                        Expect.equal subject1.width 3 "Length (width) of a matrix is not the same as the original list"
-                        Expect.equal (subject1.list ()) lst1 "Matrix didn't convert to the original list"
-
-                        let lst2 = [ [ 1; 2; 3 ]; [ 4; 5; 6 ] ]
-                        let subject2: Matrix<int> = Matrix(lst2)
-
-                        Expect.equal
-                            subject2.height
-                            2
-                            "Length (height) of a matrix is not the same as the original list"
-
-                        Expect.equal subject2.width 3 "Length (width) of a matrix is not the same as the original list"
-                        Expect.equal (subject2.list ()) lst2 "Matrix didn't convert to the original list"
-
-                        let lst3 =
-                            [ [ 1; 2; 3 ]
-                              [ 4; 5; 6 ]
-                              [ 7; 8; 9 ]
-                              [ 10; 11; 12 ] ]
-
-                        let subject3: Matrix<int> = Matrix(lst3)
-
-                        Expect.equal
-                            subject3.height
-                            4
-                            "Length (height) of a matrix is not the same as the original list"
-
-                        Expect.equal subject3.width 3 "Length (width) of a matrix is not the same as the original list"
-                        Expect.equal (subject3.list ()) lst3 "Matrix didn't convert to the original list"
+                        Expect.equal subject.width 3 "Length (width) of a matrix is not the same as the original list"
+                        Expect.equal (subject.list ()) lst "Matrix didn't convert to the original list"
                     testCase "Small sparse matrix test"
                     <| fun _ ->
-                        let lst1 =
-                            [ [ 1; 1; 1 ]
-                              [ 1; 1; 1 ]
-                              [ 1; 1; 1 ] ]
-
-                        let subject1: Matrix<int> = Matrix(lst1)
-
-                        Expect.equal
-                            subject1.height
-                            3
-                            "Length (height) of a matrix is not the same as the original list"
-
-                        Expect.equal subject1.width 3 "Length (width) of a matrix is not the same as the original list"
-                        Expect.equal (subject1.list ()) lst1 "Matrix didn't convert to the original list"
-
-                        let lst2 = [ [ 1; 1; 1 ]; [ 1; 1; 1 ] ]
-                        let subject2: Matrix<int> = Matrix(lst2)
-
-                        Expect.equal
-                            subject2.height
-                            2
-                            "Length (height) of a matrix is not the same as the original list"
-
-                        Expect.equal subject2.width 3 "Length (width) of a matrix is not the same as the original list"
-                        Expect.equal (subject2.list ()) lst2 "Matrix didn't convert to the original list"
-
-                        let lst3 =
+                        let lst =
                             [ [ 1; 1; 1 ]
                               [ 1; 1; 1 ]
                               [ 1; 1; 1 ]
                               [ 1; 1; 1 ] ]
 
-                        let subject3: Matrix<int> = Matrix(lst3)
+                        let subject: Matrix<int> = Matrix(lst)
 
-                        Expect.equal
-                            subject3.height
-                            4
-                            "Length (height) of a matrix is not the same as the original list"
+                        Expect.equal subject.height 4 "Length (height) of a matrix is not the same as the original list"
 
-                        Expect.equal subject3.width 3 "Length (width) of a matrix is not the same as the original list"
-                        Expect.equal (subject3.list ()) lst3 "Matrix didn't convert to the original list"
+                        Expect.equal subject.width 3 "Length (width) of a matrix is not the same as the original list"
+                        Expect.equal (subject.list ()) lst "Matrix didn't convert to the original list"
                     testCase "Multiplication of vectors to matrixes"
                     <| fun _ ->
                         let intVec1: Vector<int> = Vector([ 1; 2; 3 ])
@@ -129,7 +66,7 @@ module LinAlgTests =
                                 .list ())
                             res2
                             "Multiplication of a vector(int) to a matrix(int) failed (+ as concat)"
-                    testProperty "Multiplication of vectors to matrixes (prop)"
+                    testProperty "Multiplication of vectors to zero matrix (prop)"
                     <| fun (intVec: Vector<int>) ->
                         let n = intVec.length
 
@@ -137,18 +74,28 @@ module LinAlgTests =
                             let ZArray = List.replicate n <| List.replicate n 0
                             let ZMat: Matrix<int> = Matrix(ZArray)
 
-                            let EArray =
-                                ZArray
-                                |> List.mapi (fun i arr_i -> List.updateAt i 1 arr_i)
-
-                            let EMat: Matrix<int> = Matrix(EArray)
-
                             Expect.allEqual
                                 ((intVec.mult (+) (*) ZMat).list ())
                                 0
                                 "Standart multiplication of a vector(int) to zero matrix failed"
+                    testProperty "Multiplication of vectors to Id matrix (prop)"
+                    <| fun (intVec: Vector<int>) ->
+                        let n = intVec.length
+
+                        if n <> 0 then // skip if vector has 0 length
+                            let EArray =
+                                (List.replicate n <| List.replicate n 0)
+                                |> List.mapi (fun i arr_i -> List.updateAt i 1 arr_i)
+
+                            let EMat: Matrix<int> = Matrix(EArray)
 
                             Expect.equal
                                 (intVec.mult (+) (*) EMat)
                                 intVec
-                                "Standart multiplication of a vector(int) to Id matrix failed" ] ]
+                                "Standart multiplication of a vector(int) to Id matrix failed"
+                    testProperty "Multiplication of vectors to matrixes (prop)"
+                    <| fun (intVec: Vector<int>, intMat: Matrix<int>) ->
+                        if intVec.length <> intMat.height then
+                            Expect.throwsT<TensorMultiplicationException>
+                                (fun _ -> intVec.mult (+) (*) intMat |> ignore)
+                                "Standart multiplication of a vector to matrix should fail" ] ]

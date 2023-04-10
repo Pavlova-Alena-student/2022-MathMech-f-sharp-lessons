@@ -125,7 +125,6 @@ module LinAlg =
             if normSizeH.IsSome then
                 normSizeH.Value
             else
-                // assert (lst.Length > 0)
                 _getMin2Pow <| lst.Length
 
         let normSizeW =
@@ -137,7 +136,6 @@ module LinAlg =
                         0
                     else
                         lst.[0].Length
-                //assert (lenW > 0)
 
                 if not
                    <| List.forall (fun line -> List.length line = lenW) lst then
