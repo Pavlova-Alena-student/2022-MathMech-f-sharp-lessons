@@ -1,6 +1,7 @@
 namespace MathMechFSharpLessons.Tests
 
 open Expecto
+open FsCheck
 open MathMechFSharpLessons
 
 module LinAlgTests =
@@ -94,8 +95,20 @@ module LinAlgTests =
                                 intVec
                                 "Standart multiplication of a vector(int) to Id matrix failed"
                     testProperty "Multiplication of vectors to matrixes (prop)"
-                    <| fun (intVec: Vector<int>, intMat: Matrix<int>) ->
-                        if intVec.length <> intMat.height then
-                            Expect.throwsT<TensorMultiplicationException>
-                                (fun _ -> intVec.mult (+) (*) intMat |> ignore)
-                                "Standart multiplication of a vector to matrix should fail" ] ]
+                    <| fun (lst: int list) ->
+                        let intVec: Vector<int> = Vector<int>(lst)
+
+                        let lstLst: int list list =
+                            MatrixGenerator.matrixGen<int> (lst.Length) ((Arb.generate<int>.Sample (1, 1)).[0])
+
+                        let intMat: Matrix<int> = Matrix<int>(lstLst)
+
+                        let naiveMult: int list =
+                            List.map
+                                (fun col -> List.fold2 (fun acc lst_i col_i -> acc + (lst_i * col_i)) 0 lst col)
+                                (List.transpose lstLst)
+
+                        Expect.equal
+                            ((intVec.mult (+) (*) intMat).list ())
+                            naiveMult
+                            "Standart multiplication of a vector to matrix should be equal to naive implementation" ] ]

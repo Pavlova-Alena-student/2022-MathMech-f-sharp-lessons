@@ -14,6 +14,7 @@
         <Compile Include="Task2Tests.fs" />
         <Compile Include="TreeTests.fs" />
         <Compile Include="Task3Tests.fs" />
+        <Compile Include="SillyMatrixGenerator.fs" />
         <Compile Include="LinAlgTests.fs" />
         <Compile Include="Task4Tests.fs" />
         <Compile Include="Main.fs" />
