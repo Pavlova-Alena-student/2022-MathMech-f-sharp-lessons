@@ -48,8 +48,8 @@ module LinAlg =
         | VNode (l1, r1), VNode (l2, r2) -> relaxVector (vectorMap2 func l1 l2) (vectorMap2 func r1 r2)
         | VLeaf (v1, c1), VNode (l2, r2) ->
             relaxVector (vectorMap2 func (VLeaf(v1, c1 / 2)) l2) (vectorMap2 func (VLeaf(v1, c1 / 2)) r2)
-        | VNode (l1, c1), VLeaf (v2, c2) ->
-            relaxVector (vectorMap2 func l1 (VLeaf(v2, c2 / 2))) (vectorMap2 func c1 (VLeaf(v2, c2 / 2)))
+        | VNode (l1, r1), VLeaf (v2, c2) ->
+            relaxVector (vectorMap2 func l1 (VLeaf(v2, c2 / 2))) (vectorMap2 func r1 (VLeaf(v2, c2 / 2)))
         | _ ->
             raise // FIXME: name the exception?
             <| Exception("Can't map2 with vectors of different sizes")
@@ -212,12 +212,12 @@ module LinAlg =
         : VectorBinTree<'resType> =
         match vec, mat with
         | VLeaf (vecVal, c1), MLeaf (matVal, c2) when c1 = c2 -> VLeaf(fMult vecVal matVal (int c1), c1)
-        | VLeaf (vecVal, c1), MLeaf (matVal, c2) when c1 < c2 -> VLeaf(fMult vecVal matVal (int c1), c1)
-        | VLeaf (vecVal, c1), MLeaf (matVal, c2) when c1 > c2 -> VLeaf(fMult vecVal matVal (int c2), c2)
-        | VNode (v0, v1), MNode (a00, a01, MLeaf (None, _), MLeaf (None, _)) ->
-            let l = multVecMat fAdd fMult vec a00
-            let r = multVecMat fAdd fMult vec a01
-            relaxVector l r
+        //| VLeaf (vecVal, c1), MLeaf (matVal, c2) when c1 < c2 -> VLeaf(fMult vecVal matVal (int c1), c1)
+        //| VLeaf (vecVal, c1), MLeaf (matVal, c2) when c1 > c2 -> VLeaf(fMult vecVal matVal (int c2), c2)
+        //| VNode (v0, v1), MNode (a00, a01, MLeaf (None, _), MLeaf (None, _)) ->
+        //    let l = multVecMat fAdd fMult vec a00
+        //    let r = multVecMat fAdd fMult vec a01
+        //    relaxVector l r
         | VNode (v0, v1), MNode (a00, a01, a10, a11) ->
             let v0a00 = multVecMat fAdd fMult v0 a00
             let v1a10 = multVecMat fAdd fMult v1 a10
