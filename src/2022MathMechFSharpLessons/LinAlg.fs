@@ -36,6 +36,22 @@ module LinAlg =
         | VLeaf (lv, lc), VLeaf (rv, rc) when lc = rc && lv = rv -> VLeaf(lv, lc * 2)
         | _ -> VNode(left, right)
 
+    // Deletes None-s from end
+    let rec private trimVector tree =
+        match tree with
+        | VNode (t, VLeaf (None, _)) -> trimVector t
+        | _ -> tree
+
+    // Opposite to trimVector, adds None-s to the end until nsize <= current size
+    let private extendVector nsize size tree =
+        let rec extendVector nsize size tree =
+            if size < nsize then
+                extendVector nsize (size * 2) (VNode(tree, VLeaf(None, size)))
+            else
+                tree
+
+        extendVector (_getMin2Pow nsize) (_getMin2Pow size) tree
+
     // both of these map-s expects "func" to handle operations on 'elementType option
     let rec private vectorMap func tree =
         match tree with
@@ -75,7 +91,7 @@ module LinAlg =
 
             relaxVector l r
         else if lst.Length = 0 then
-            VLeaf(None, 0)
+            VLeaf(None, 1)
         else
             VLeaf(Some(lst.[0]), 1)
 
@@ -171,7 +187,7 @@ module LinAlg =
                         (lst.[.. (normSize / 2 - 1)])
 
                 let rt =
-                    if normSize / 2 < lst.[0].Length then
+                    if lst.Length <> 0 && normSize / 2 < lst.[0].Length then
                         listToMatrix (Some(normSize / 2)) (Some(normSize / 2))
                         <| List.map
                             (fun (line: 'elementType list) -> line.[(normSize / 2) ..])
@@ -190,6 +206,7 @@ module LinAlg =
 
                 let rb =
                     if (normSize / 2 < lst.Length
+                        && lst.Length <> 0
                         && normSize / 2 < lst.[0].Length) then
                         listToMatrix (Some(normSize / 2)) (Some(normSize / 2))
                         <| List.map
@@ -200,7 +217,7 @@ module LinAlg =
 
                 relaxMatrix lt rt lb rb
             elif lst.Length = 0 || lst.[0].Length = 0 then
-                MLeaf(None, 0)
+                MLeaf(None, 1)
             else
                 MLeaf(Some(lst.[0].[0]), 1)
 
@@ -212,12 +229,6 @@ module LinAlg =
         : VectorBinTree<'resType> =
         match vec, mat with
         | VLeaf (vecVal, c1), MLeaf (matVal, c2) when c1 = c2 -> VLeaf(fMult vecVal matVal (int c1), c1)
-        //| VLeaf (vecVal, c1), MLeaf (matVal, c2) when c1 < c2 -> VLeaf(fMult vecVal matVal (int c1), c1)
-        //| VLeaf (vecVal, c1), MLeaf (matVal, c2) when c1 > c2 -> VLeaf(fMult vecVal matVal (int c2), c2)
-        //| VNode (v0, v1), MNode (a00, a01, MLeaf (None, _), MLeaf (None, _)) ->
-        //    let l = multVecMat fAdd fMult vec a00
-        //    let r = multVecMat fAdd fMult vec a01
-        //    relaxVector l r
         | VNode (v0, v1), MNode (a00, a01, a10, a11) ->
             let v0a00 = multVecMat fAdd fMult v0 a00
             let v1a10 = multVecMat fAdd fMult v1 a10
@@ -305,7 +316,12 @@ module LinAlg =
                     <| TensorMultiplicationException("Can't multiply vector to matrix: sizes don't match")
 
                 Vector<'resType>(
-                    multVecMat (advancedAdd fAdd) (advancedMult fAdd fMult) this.tree other.tree,
+                    multVecMat
+                        (advancedAdd fAdd)
+                        (advancedMult fAdd fMult)
+                        (extendVector other.width this.length this.tree)
+                        other.tree
+                    |> trimVector,
                     other.width
                 )
 
