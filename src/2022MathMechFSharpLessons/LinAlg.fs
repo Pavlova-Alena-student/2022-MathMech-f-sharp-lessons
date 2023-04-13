@@ -259,9 +259,9 @@ module LinAlg =
             raise
             <| TensorMultiplicationException("Failed to multiply vector on matrix")
 
-    let private advancedAdd fAdd a b =
+    let private wrapFunc func a b =
         match a, b with
-        | Some (a), Some (b) -> Some(fAdd a b)
+        | Some (a), Some (b) -> Some(func a b)
         | _ -> None
 
     let private advancedMult fAdd fMult a b cnst2pow = // multiplication a * b and the result multiplied on 2^const from integers
@@ -317,13 +317,16 @@ module LinAlg =
 
                 Vector<'resType>(
                     multVecMat
-                        (advancedAdd fAdd)
+                        (wrapFunc fAdd)
                         (advancedMult fAdd fMult)
                         (extendVector other.width this.length this.tree)
                         other.tree
                     |> trimVector,
                     other.width
                 )
+
+            static member map2 func (a: Vector<'elementTypeA>) (b: Vector<'elementTypeB>) =
+                Vector(vectorMap2 (wrapFunc func) a.tree b.tree, a.length)
 
             new(arr: 'elementType list) = new Vector<'elementType>(listToVector None arr, arr.Length)
         end
