@@ -58,6 +58,12 @@ module LinAlg =
         | VLeaf (value, compr) -> VLeaf(func value, compr)
         | VNode (l, r) -> relaxVector (vectorMap func l) (vectorMap func r)
 
+    // Note: func don't use compression param. And func is commutative
+    let rec private vectorFold func acc tree =
+        match tree with
+        | VLeaf (value, compr) -> func acc value
+        | VNode (l, r) -> vectorFold func (vectorFold func acc l) r
+
     let rec private vectorMap2 func tree1 tree2 =
         match tree1, tree2 with
         | VLeaf (v1, c1), VLeaf (v2, c2) when c1 = c2 -> VLeaf(func v1 v2, c1)
@@ -69,6 +75,23 @@ module LinAlg =
         | _ ->
             raise // FIXME: name the exception?
             <| Exception("Can't map2 with vectors of different sizes")
+
+    (*let rec private updateVectorAt<'elementType when 'elementType: equality>
+        (tree: VectorBinTree<'elementType>)
+        (pos: int)
+        (value: 'elementType)
+        ((l, r): int * int)
+        : VectorBinTree<'elementType> =
+        match tree with
+        | VLeaf (_, c) when c = 1 -> (VLeaf(Some(value), 1))
+        | VLeaf (oldValue, c) -> updateVectorAt (VNode(VLeaf(oldValue, c / 2), VLeaf(oldValue, c / 2))) pos value (l, r)
+        | VNode (leftSub, rightSub) ->
+            let m = (l + r) / 2
+
+            if m > pos then
+                relaxVector (updateVectorAt leftSub pos value (l, m)) rightSub
+            else
+                relaxVector leftSub (updateVectorAt rightSub pos value (m, r))*)
 
     let rec private listToVector<'elementType when 'elementType: equality>
         (normSize: int option)
@@ -259,11 +282,6 @@ module LinAlg =
             raise
             <| TensorMultiplicationException("Failed to multiply vector on matrix")
 
-    let private wrapFunc func a b =
-        match a, b with
-        | Some (a), Some (b) -> Some(func a b)
-        | _ -> None
-
     let private advancedMult fAdd fMult a b cnst2pow = // multiplication a * b and the result multiplied on 2^const from integers
         let rec multiply a cnst =
             if cnst = 1 then
@@ -317,7 +335,7 @@ module LinAlg =
 
                 Vector<'resType>(
                     multVecMat
-                        (wrapFunc fAdd)
+                        (Option.map2 fAdd)
                         (advancedMult fAdd fMult)
                         (extendVector other.width this.length this.tree)
                         other.tree
@@ -325,8 +343,21 @@ module LinAlg =
                     other.width
                 )
 
+            //member this.updateAt (pos: int) (value: 'elementType) : Vector<'elementType> =
+            //    Vector<'elementType>(updateVectorAt this.tree pos value (0, _getMin2Pow <| this.length), this.length)
+
+            static member allEqualTo (value: 'elementType) (vec: Vector<'elementType>) : bool =
+                vectorFold
+                    (fun acc el_opt ->
+                        match el_opt with
+                        | Some (el) when el = value -> acc
+                        | None -> acc
+                        | _ -> false)
+                    true
+                    vec.tree
+
             static member map2 func (a: Vector<'elementTypeA>) (b: Vector<'elementTypeB>) =
-                Vector(vectorMap2 (wrapFunc func) a.tree b.tree, a.length)
+                Vector<'elementType>(vectorMap2 (Option.map2 func) a.tree b.tree, a.length)
 
             new(arr: 'elementType list) = new Vector<'elementType>(listToVector None arr, arr.Length)
         end

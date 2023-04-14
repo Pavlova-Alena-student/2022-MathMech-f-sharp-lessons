@@ -40,29 +40,34 @@ module Task5Tests =
             "BFS-related tests"
             [ testList "Tests for BFS-related functions" []
               testList
-                  "BFS for connected components problem"
-                  [ testCase "Example of solving connected to one vertex component problem"
+                  "BFS for shortest path problem"
+                  [ testCase "Example of solving shortest path problem"
                     <| fun _ ->
-                        let front: GraphVertexes =
-                            BinProperties(Vector([ true; false; false; false; false ]))
+                        let subject = (BFS smallGraph 0).list ()
 
-                        let subject =
-                            match BFS front smallGraph with
-                            | BinProperties (prop) -> prop.list ()
-                            | _ -> []
+                        let result =
+                            [ Some(0)
+                              Some(1)
+                              None
+                              Some(1)
+                              Some(2) ]
 
-                        let result = [ true; true; false; true; true ]
-                        Expect.equal subject result "Failed to find a connected component"
-                    testCase "Example of solving connected components problem"
+                        Expect.equal subject result "Failed to find shortest pathes"
+                    testCase "Example of solving shortest path problem 2"
                     <| fun _ ->
-                        let front: GraphVertexes = IntProperties(Vector([ 1; 2; 3; 4; 5 ]))
+                        let subject = (BFS midGraph 0).list ()
 
-                        let subject =
-                            match BFS front smallGraph with
-                            | IntProperties (prop) -> prop.list ()
-                            | _ -> []
+                        let result =
+                            [ Some(0)
+                              Some(1)
+                              Some(1)
+                              Some(2)
+                              Some(3)
+                              Some(4)
+                              Some(6)
+                              Some(6)
+                              Some(5)
+                              Some(4)
+                              Some(3) ]
 
-                        let result = [ 1; 1; 3; 1; 1 ]
-                        Expect.equal subject result "Failed to find connected components" ]
-              testList "BFS for shortest path problem" []
-              testList "BFS for shortest circle problem" [] ]
+                        Expect.equal subject result "Failed to find shortest pathes 2" ] ]
