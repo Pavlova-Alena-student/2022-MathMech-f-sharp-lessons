@@ -16,13 +16,14 @@ module Task5Tests =
                   [ 0; 0; 0; 0; 0 ]
                   [ 1; 0; 0; 0; 1 ]
                   [ 0; 0; 0; 1; 0 ] ]
+                |> List.map (List.map (fun el -> if el = 0 then false else true))
             ) }
 
     let midGraph: Graph =
         { adjacency =
             Matrix(
                 [ [ 0; 1; 1; 0; 0; 0; 0; 0; 0; 0; 0 ]
-                  [ 1; 0; 0; 1; 0; 0; 0; 0; 0; 3; 0 ]
+                  [ 1; 0; 0; 1; 0; 0; 0; 0; 0; 1; 0 ]
                   [ 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0 ]
                   [ 0; 1; 0; 0; 1; 0; 0; 0; 0; 0; 1 ]
                   [ 0; 0; 0; 1; 0; 1; 0; 0; 0; 0; 0 ]
@@ -30,8 +31,9 @@ module Task5Tests =
                   [ 0; 0; 0; 0; 0; 0; 0; 1; 1; 0; 0 ]
                   [ 0; 0; 0; 0; 0; 0; 1; 0; 1; 0; 0 ]
                   [ 0; 0; 0; 0; 0; 0; 1; 1; 0; 1; 0 ]
-                  [ 0; 3; 0; 0; 0; 0; 0; 0; 1; 0; 0 ]
+                  [ 0; 1; 0; 0; 0; 0; 0; 0; 1; 0; 0 ]
                   [ 0; 0; 0; 1; 0; 1; 0; 0; 0; 0; 0 ] ]
+                |> List.map (List.map (fun el -> if el = 0 then false else true))
             ) }
 
     [<Tests>]
@@ -64,10 +66,10 @@ module Task5Tests =
                               Some(2)
                               Some(3)
                               Some(4)
-                              Some(6)
-                              Some(6)
-                              Some(5)
                               Some(4)
+                              Some(4)
+                              Some(3)
+                              Some(2)
                               Some(3) ]
 
                         Expect.equal subject result "Failed to find shortest pathes 2" ] ]
