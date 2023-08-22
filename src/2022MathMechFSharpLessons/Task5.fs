@@ -33,10 +33,12 @@ module Task5 =
             if front.isEmpty then
                 acc
             else
+                let newVisited = visited + front
+
                 BFS
                     graph
-                    ((front.tickFront graph).mask visited)
-                    (front + visited)
+                    ((front.tickFront graph).mask newVisited)
+                    newVisited
                     (depth + 1)
                     (accumulateDepth front depth acc)
 
