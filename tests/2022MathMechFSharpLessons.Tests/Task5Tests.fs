@@ -8,7 +8,7 @@ module Task5Tests =
     open LinAlg
     open System.Collections.Generic // Queue
 
-    let naiveBFS (graph: int list list) vertex =
+    let naiveBFS (graph: bool list list) vertex =
         let n = graph.Length
         let mutable q: Queue<int * int> = new Queue<int * int>()
         q.Enqueue(vertex, 0)
@@ -23,27 +23,24 @@ module Task5Tests =
                 ans <- FSharp.Collections.List.updateAt currentVertex (Some(depth)) ans
 
                 for i in 0 .. n - 1 do
-                    if graph.[currentVertex].[i] <> 0 && was.[i] = false then
+                    if graph.[currentVertex].[i] = true
+                       && was.[i] = false then
                         q.Enqueue(i, depth + 1)
 
         ans
 
     // 1-2; 1-4; 4-5
-    let smallGraphList: int list list =
+    let smallGraphList: bool list list =
         [ [ 0; 1; 0; 1; 0 ]
           [ 1; 0; 0; 0; 0 ]
           [ 0; 0; 0; 0; 0 ]
           [ 1; 0; 0; 0; 1 ]
           [ 0; 0; 0; 1; 0 ] ]
+        |> List.map (List.map (fun el -> if el = 0 then false else true))
 
-    let smallGraph: Graph =
-        { adjacency =
-            Matrix(
-                smallGraphList
-                |> List.map (List.map (fun el -> if el = 0 then false else true))
-            ) }
+    let smallGraph: Graph = { adjacency = Matrix(smallGraphList) }
 
-    let midGraphList: int list list =
+    let midGraphList: bool list list =
         [ [ 0; 1; 1; 0; 0; 0; 0; 0; 0; 0; 0 ]
           [ 1; 0; 0; 1; 0; 0; 0; 0; 0; 1; 0 ]
           [ 1; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0 ]
@@ -55,19 +52,15 @@ module Task5Tests =
           [ 0; 0; 0; 0; 0; 0; 1; 1; 0; 1; 0 ]
           [ 0; 1; 0; 0; 0; 0; 0; 0; 1; 0; 0 ]
           [ 0; 0; 0; 1; 0; 1; 0; 0; 0; 0; 0 ] ]
+        |> List.map (List.map (fun el -> if el = 0 then false else true))
 
-    let midGraph: Graph =
-        { adjacency =
-            Matrix(
-                midGraphList
-                |> List.map (List.map (fun el -> if el = 0 then false else true))
-            ) }
+    let midGraph: Graph = { adjacency = Matrix(midGraphList) }
 
     [<Tests>]
     let tests =
         testList
             "BFS-related tests"
-            [ testList "Tests for BFS-related functions" []
+            [ testList "Tests for BFS-related functions" [] // There are none :/
               testList
                   "BFS for shortest path problem"
                   [ testCase "Example of solving shortest path problem"
@@ -104,19 +97,15 @@ module Task5Tests =
 
                         Expect.equal subject result "Failed to find shortest paths in medium graph"
                         Expect.equal naive result "Failed to find shortest paths in medium graph (naive method)"
-                    testProperty "Solving shortest path problem for random graph"
-                    <| fun (intListList: int list list) -> // edges: List<int*int>
-                        let graphList = intListList // TODO
-
-                        if graphList.Length > 0 then
+                    testPropertyWithConfig
+                        { FsCheckConfig.defaultConfig with maxTest = 999 }
+                        "Solving shortest path problem for random graph with 1000 vertexes"
+                    <| fun (edges: list<int * int>) ->
+                        if edges.Length > 0 then
                             let graph: Graph =
                                 { adjacency =
-                                    Matrix(
-                                        graphList
-                                        |> List.map (List.map (fun el -> if el = 0 then false else true))
-                                    ) }
+                                    Matrix(edges |> List.map (fun (i, j) -> (i, j, true)), (1000, 1000), false) }
 
                             let subject = (BFS graph 0).list ()
-                            let result = (naiveBFS graphList 0)
-
+                            let result = (naiveBFS (graph.adjacency.list ()) 0)
                             Expect.equal subject result "Failed to find shortest paths (prop)" ] ]

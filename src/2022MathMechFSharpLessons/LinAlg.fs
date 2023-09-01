@@ -58,12 +58,6 @@ module LinAlg =
         | VLeaf (value, compr) -> VLeaf(func value, compr)
         | VNode (l, r) -> relaxVector (vectorMap func l) (vectorMap func r)
 
-    // Note: func don't use compression param. And func is commutative
-    let rec private vectorFold func acc tree =
-        match tree with
-        | VLeaf (value, compr) -> func acc value
-        | VNode (l, r) -> vectorFold func (vectorFold func acc l) r
-
     let rec private vectorMap2 func tree1 tree2 =
         match tree1, tree2 with
         | VLeaf (v1, c1), VLeaf (v2, c2) when c1 = c2 -> VLeaf(func v1 v2, c1)
@@ -76,7 +70,7 @@ module LinAlg =
             raise // FIXME: name the exception?
             <| Exception("Can't map2 with vectors of different sizes")
 
-    (*let rec private updateVectorAt<'elementType when 'elementType: equality>
+    (*let rec private updateVectorAt<'elementType when 'elementType: equality> // reference for updateMatrixAt
         (tree: VectorBinTree<'elementType>)
         (pos: int)
         (value: 'elementType)
@@ -154,6 +148,49 @@ module LinAlg =
             ->
             MLeaf(ltv, ltc * 2)
         | _ -> MNode(lt, rt, lb, rb)
+
+    let rec private updateMatrixAt<'elementType when 'elementType: equality>
+        (tree: MatrixQuadTree<'elementType>)
+        ((row, col): int * int)
+        (value: 'elementType)
+        (((l, r), (t, b)): (int * int) * (int * int)) // bounderies of current tree
+        : MatrixQuadTree<'elementType> =
+        match tree with
+        | MLeaf (_, c) when c = 1 -> (MLeaf(Some(value), 1))
+        | MLeaf (oldValue, c) ->
+            updateMatrixAt
+                (MNode(MLeaf(oldValue, c / 2), MLeaf(oldValue, c / 2), MLeaf(oldValue, c / 2), MLeaf(oldValue, c / 2)))
+                (row, col)
+                value
+                ((l, r), (t, b))
+        | MNode (leftTopSub, rightTopSub, leftBottomSub, rightBottomSub) ->
+            let mH = (l + r) / 2
+            let mW = (t + b) / 2
+
+            if mH > col && mW > row then
+                relaxMatrix
+                    (updateMatrixAt leftTopSub (row, col) value ((l, mH), (t, mW)))
+                    rightTopSub
+                    leftBottomSub
+                    rightBottomSub
+            elif mH > col then // mW <= row
+                relaxMatrix
+                    leftTopSub
+                    rightTopSub
+                    (updateMatrixAt leftBottomSub (row, col) value ((l, mH), (mW, b)))
+                    rightBottomSub
+            elif mW > row then // mH <= col
+                relaxMatrix
+                    leftTopSub
+                    (updateMatrixAt rightTopSub (row, col) value ((mH, r), (t, mW)))
+                    leftBottomSub
+                    rightBottomSub
+            else // mH <= col && mW <= row
+                relaxMatrix
+                    leftTopSub
+                    rightTopSub
+                    leftBottomSub
+                    (updateMatrixAt rightBottomSub (row, col) value ((mH, r), (mW, b)))
 
     let rec private listToMatrix<'elementType when 'elementType: equality>
         (normSizeH: int option)
@@ -315,6 +352,60 @@ module LinAlg =
                      else
                          arr.[0].Length)
                 )
+
+            new(coo: List<int * int * 'elementType>, tupleHW: int * int, neutralValue: 'elementType) =
+                let rec gen (sizeH, sizeW) space =
+                    if space > 1 then
+                        let lt =
+                            if sizeH * 2 >= space && sizeW * 2 >= space then
+                                MLeaf(Some(neutralValue), space / 2)
+                            elif sizeH < 1 || sizeW < 1 then
+                                MLeaf(None, space / 2)
+                            else
+                                gen (sizeH, sizeW) (space / 2)
+
+                        let rt =
+                            if sizeH * 2 >= space && sizeW >= space then
+                                MLeaf(Some(neutralValue), space / 2)
+                            elif sizeH < 1 || sizeW * 2 <= space then
+                                MLeaf(None, space / 2)
+                            else
+                                gen (sizeH, sizeW - space / 2) (space / 2)
+
+                        let lb =
+                            if sizeH >= space && sizeW * 2 >= space then
+                                MLeaf(Some(neutralValue), space / 2)
+                            elif sizeH * 2 <= space || sizeW < 1 then
+                                MLeaf(None, space / 2)
+                            else
+                                gen (sizeH - space / 2, sizeW) (space / 2)
+
+                        let rb =
+                            if sizeH >= space && sizeW >= space then
+                                MLeaf(Some(neutralValue), space / 2)
+                            elif sizeH * 2 <= space || sizeW * 2 <= space then
+                                MLeaf(None, space / 2)
+                            else
+                                gen (sizeH - space / 2, sizeW - space / 2) (space / 2)
+
+                        relaxMatrix lt rt lb rb
+                    elif space = 0 then
+                        MLeaf(None, 1)
+                    else
+                        MLeaf(Some(neutralValue), 1)
+
+                let height = _getMin2Pow <| fst tupleHW
+                let width = _getMin2Pow <| snd tupleHW
+                let size = max height width
+                let tree: MatrixQuadTree<'elementType> = gen tupleHW size // MLeaf(Some(neutralValue), size), but height * width instead of size * size
+
+                new Matrix<'elementType>(
+                    List.fold
+                        (fun tree (i, j, value) -> updateMatrixAt tree (i, j) value ((0, size), (0, size)))
+                        tree
+                        coo,
+                    tupleHW
+                )
         end
 
     // wrapper over VectorBinTree
@@ -343,10 +434,15 @@ module LinAlg =
                     other.width
                 )
 
-            //member this.updateAt (pos: int) (value: 'elementType) : Vector<'elementType> =
+            //member this.updateAt (pos: int) (value: 'elementType) : Vector<'elementType> = // Vector is not mutable
             //    Vector<'elementType>(updateVectorAt this.tree pos value (0, _getMin2Pow <| this.length), this.length)
 
             static member allEqualTo (value: 'elementType) (vec: Vector<'elementType>) : bool =
+                let rec vectorFold func acc tree =
+                    match tree with
+                    | VLeaf (value, compr) -> func acc value
+                    | VNode (l, r) -> vectorFold func (vectorFold func acc l) r
+
                 vectorFold
                     (fun acc el_opt ->
                         match el_opt with

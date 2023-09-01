@@ -126,4 +126,31 @@ module LinAlgTests =
                         Expect.equal
                             ((intVec.mult (+) (*) intMat).list ())
                             naiveMult
-                            "Standart multiplication of a vector to matrix should be equal to naive implementation" ] ]
+                            "Standart multiplication of a vector to matrix should be equal to naive implementation"
+                    testCase "Building small matrix from coordinate list"
+                    <| fun _ ->
+                        let coordinates = [ (1, 1, 5); (2, 3, 8) ]
+                        let height = 4
+                        let width = 5
+                        let subject: Matrix<int> = Matrix(coordinates, (height, width), 0)
+
+                        let resultList: List<List<int>> =
+                            [ [ 0; 0; 0; 0; 0 ]
+                              [ 0; 5; 0; 0; 0 ]
+                              [ 0; 0; 0; 8; 0 ]
+                              [ 0; 0; 0; 0; 0 ] ]
+
+                        let result: Matrix<int> = Matrix(resultList)
+
+                        Expect.equal subject.height height "Matrix height is different from initial"
+                        Expect.equal subject.width width "Matrix width is different from initial"
+
+                        Expect.equal
+                            (subject.list ())
+                            resultList
+                            "Matrix created from coordinate list is does not convert to correct list of lists"
+
+                        Expect.equal
+                            subject
+                            result
+                            "Matrix created from coordinate list is not the same as created from list of lists" ] ]
