@@ -3,7 +3,7 @@ namespace MathMechFSharpLessons
 module Task5 =
     open LinAlg
 
-    type Graph = { adjacency: Matrix<bool> }
+    type Graph = { adjacency: Matrix<bool> } // check if matrix is a square?
 
     type GraphVertexes =
         { properties: Vector<bool> }

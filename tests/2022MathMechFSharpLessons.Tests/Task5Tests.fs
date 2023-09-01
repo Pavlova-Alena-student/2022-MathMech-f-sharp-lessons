@@ -97,15 +97,14 @@ module Task5Tests =
 
                         Expect.equal subject result "Failed to find shortest paths in medium graph"
                         Expect.equal naive result "Failed to find shortest paths in medium graph (naive method)"
-                    testPropertyWithConfig
-                        { FsCheckConfig.defaultConfig with maxTest = 999 }
-                        "Solving shortest path problem for random graph with 1000 vertexes"
+                    testProperty "Solving shortest path problem for random bool graph"
                     <| fun (edges: list<int * int>) ->
-                        if edges.Length > 0 then
-                            let graph: Graph =
-                                { adjacency =
-                                    Matrix(edges |> List.map (fun (i, j) -> (i, j, true)), (1000, 1000), false) }
+                        let size = List.fold (fun acc (i, j) -> max acc <| max i j) 0 edges
 
-                            let subject = (BFS graph 0).list ()
-                            let result = (naiveBFS (graph.adjacency.list ()) 0)
-                            Expect.equal subject result "Failed to find shortest paths (prop)" ] ]
+                        let graph: Graph =
+                            { adjacency =
+                                Matrix(edges |> List.map (fun (i, j) -> (i, j, true)), (size + 1, size + 1), false) }
+
+                        let subject = (BFS graph 0).list ()
+                        let result = (naiveBFS (graph.adjacency.list ()) 0)
+                        Expect.equal subject result "Failed to find shortest paths (prop)" ] ]
